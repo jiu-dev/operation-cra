@@ -1,0 +1,26 @@
+<div
+  class="flex grow h-screen flex-col gap-y-5 overflow-y-auto bg-indigo-600 px-6 pb-4"
+>
+  <div class="flex h-16 shrink-0 items-center">
+    <img
+      class="h-8 w-auto"
+      src="https://tailwindui.com/plus/img/logos/mark.svg?color=white"
+      alt="Your Company"
+    />
+  </div>
+  <nav class="flex flex-1 flex-col">
+    <ul role="list" class="flex flex-1 flex-col gap-y-7">
+      <li>
+        <ul role="list" class="-mx-2 space-y-1">
+          <app-sidebar-link
+            *ngFor="let link of links"
+            [href]="link.href"
+            [icon]="link.icon"
+            [label]="link.label"
+            [isActive]="link.isActive"
+          ></app-sidebar-link>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</div>
