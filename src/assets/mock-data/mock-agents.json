@@ -1,0 +1,19 @@
+{
+  "agents": [
+    {
+      "userId": "jkdsvhskjbvsfhb",
+      "lastName": "Doe",
+      "firstName": "John"
+    },
+    {
+      "userId": "vhjksfkjvhfkjgh",
+      "lastName": "Marechal",
+      "firstName": "Antoine"
+    },
+    {
+      "userId": "hjkfhsdjkghkgdd",
+      "lastName": "Web",
+      "firstName": "James"
+    }
+  ]
+}

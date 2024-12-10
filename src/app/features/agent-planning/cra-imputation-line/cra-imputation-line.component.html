@@ -1,0 +1,49 @@
+<div class="flex items-center" [formGroup]="formGroup">
+  <div class="min-w-44 w-44 flex px-2">
+    <div
+      class="flex items-center pr-2"
+      [ngClass]="{
+        hidden: id === 0,
+      }"
+    >
+      <app-circular-button [size]="'xs'" (onClick)="onDeleteActivity()">
+        <svg
+          class="size-4"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"
+          />
+        </svg>
+      </app-circular-button>
+    </div>
+    <div class="w-full">
+      <app-select-input
+        [options]="activities"
+        [placeholder]="'Activite'"
+        (optionSelected)="onSelectActivity($event)"
+      ></app-select-input>
+    </div>
+  </div>
+
+  <ng-template #inputTemplate let-imputationInput>
+    <input
+      [formControlName]="imputationInput.formControlName"
+      type="text"
+      class="border border-gray-300 text-sm rounded p-1 w-full text-center"
+      [ngClass]="{
+        'bg-indigo-300 text-white': imputationInput.isWeekEnd,
+        'text-gray-900': !imputationInput.isWeekEnd,
+        'bg-gray-200 text-gray-500 cursor-not-allowed': !formGroup.get(
+          imputationInput.formControlName
+        )?.enabled,
+      }"
+    />
+  </ng-template>
+  <app-cra-days-line
+    [items]="imputationInputs"
+    [template]="inputTemplate"
+  ></app-cra-days-line>
+</div>

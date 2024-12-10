@@ -1,0 +1,10 @@
+<button
+  type="button"
+  [class.rounded-sm]="size === 'xs' || size === 'sm'"
+  [class.rounded-md]="size === 'md' || size === 'lg' || size === 'xl'"
+  [ngClass]="classes"
+  [disabled]="disabled"
+  (click)="handleClick($event)"
+>
+  <ng-content></ng-content>
+</button>

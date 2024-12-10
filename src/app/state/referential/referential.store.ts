@@ -1,27 +1,42 @@
-import { SignalStore } from '@ngrx/signal-store';
-import { Injectable } from '@angular/core';
+import {
+  patchState,
+  signalStore,
+  watchState,
+  withHooks,
+  withMethods,
+  withState,
+} from '@ngrx/signals';
+import { ReferentialState } from './referential.type';
+import { inject } from '@angular/core';
+import { ReferentialService } from '../../core/services/referential.service';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class ReferentialStore extends SignalStore<ReferentialState> {
-  constructor() {
-    super({
-      agents: [],
-      activities: [],
-      timeUnit: 'days',
-    });
-  }
+const initialState: ReferentialState = {
+  agents: [],
+  activities: [],
+  isLoading: false,
+};
 
-  setAgents(agents: Agent[]) {
-    this.update((state) => ({ ...state, agents }));
-  }
-
-  setActivities(activities: Activity[]) {
-    this.update((state) => ({ ...state, activities }));
-  }
-
-  setTimeUnit(unit: 'days' | 'hours') {
-    this.update((state) => ({ ...state, timeUnit: unit }));
-  }
-}
+export const ReferentialStore = signalStore(
+  { providedIn: 'root' },
+  withState(initialState),
+  withMethods((store, referentialService = inject(ReferentialService)) => ({
+    async loadActivities(): Promise<void> {
+      patchState(store, { isLoading: true });
+      const agents = await referentialService.getAgents();
+      const activities = await referentialService.getActivities();
+      patchState(store, {
+        agents,
+        activities,
+        isLoading: false,
+      });
+    },
+    async loadAgents(): Promise<void> {
+      patchState(store, { isLoading: true });
+      const agents = await referentialService.getAgents();
+      patchState(store, {
+        agents,
+        isLoading: false,
+      });
+    },
+  })),
+);

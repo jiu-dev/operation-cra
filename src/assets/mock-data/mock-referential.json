@@ -1,0 +1,34 @@
+{
+  "activities": [
+    {
+      "key": "mission_1",
+      "label": "Mission Alpha"
+    },
+    {
+      "key": "mission_2",
+      "label": "Mission Alpha"
+    },
+    {
+      "key": "mission_3",
+      "label": "Mission Alpha"
+    },
+    {
+      "key": "repos",
+      "label": "Repos"
+    }
+  ],
+  "agents": [
+    {
+      "key": "jkdsvhskjbvsfhb",
+      "value": "John Doe"
+    },
+    {
+      "key": "vhjksfkjvhfkjgh",
+      "label": "Antoine Marechal"
+    },
+    {
+      "key": "hjkfhsdjkghkgdd",
+      "label": "James Web"
+    }
+  ]
+}

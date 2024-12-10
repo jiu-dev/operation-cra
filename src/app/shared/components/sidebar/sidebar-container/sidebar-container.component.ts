@@ -20,7 +20,6 @@ export class SidebarContainerComponent {
   showSidebar = false;
 
   toggleSidebar(show: boolean) {
-    console.log(show);
     this.showSidebar = show;
   }
 }

@@ -11,9 +11,19 @@ import { NgFor } from '@angular/common';
 })
 export class SidebarContentComponent {
   links = [
-    { href: '#', icon: 'dashboard', label: 'Tableau de bord', isActive: true },
-    { href: '#', icon: 'team', label: 'Gestion des agents', isActive: false },
-    { href: '#', icon: 'projects', label: 'Missions', isActive: false },
+    {
+      href: 'dashboard',
+      icon: 'dashboard',
+      label: 'Tableau de bord',
+      isActive: true,
+    },
+    {
+      href: 'agents',
+      icon: 'team',
+      label: 'Gestion des agents',
+      isActive: false,
+    },
+    { href: 'missions', icon: 'projects', label: 'Missions', isActive: false },
   ];
 
   teams = [

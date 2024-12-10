@@ -1,0 +1,7 @@
+<div class="flex gap-1">
+  <div *ngFor="let item of items" class="flex flex-col items-center w-[25px]">
+    <ng-container
+      *ngTemplateOutlet="template; context: { $implicit: item }"
+    ></ng-container>
+  </div>
+</div>
