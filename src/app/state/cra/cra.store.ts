@@ -9,7 +9,7 @@ import {
   withState,
 } from '@ngrx/signals';
 import { CraState } from './cra.type';
-import { computed, inject } from '@angular/core';
+import { computed, inject, Pipe } from '@angular/core';
 import { CraDayItem } from '../../core/interfaces/cra-day-item.interface';
 import { FrMonthNames } from '../../core/enums/fr-months-name.enum';
 import { AgentService } from '../../core/services/agent.service';
@@ -29,7 +29,7 @@ const initialState: CraState = {
 export const CraStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
-  withComputed(({ monthOffset, monthRange, cra }) => ({
+  withComputed(({ monthOffset, monthRange, cra, lines }) => ({
     canNavigate: computed(() => {
       const offset = monthOffset();
       const range = monthRange();
@@ -45,9 +45,26 @@ export const CraStore = signalStore(
       const monthIndex = date.getMonth();
       return Object.values(FrMonthNames)[monthIndex];
     }),
+    getWorkingDays: computed(() => {
+      const imputeTimesArray = cra
+        .imputations()
+        .filter((imputation) => imputation.activityKey === 'repos')
+        .map((imputation) => imputation.imputeTimes)
+        .filter((imputeTime) => imputeTime !== undefined);
+      const workingDays = [];
+      for (const imputeTime of imputeTimesArray) {
+        for (let i = 0; i < imputeTime.length; i++) {
+          if (imputeTime[i] !== 0) {
+            workingDays.push(i);
+          }
+        }
+      }
+      return workingDays;
+    }),
     getImputationsSum: computed(() => {
       const imputeTimesArray = cra
         .imputations()
+        .filter((imputation) => imputation.activityKey !== 'repos')
         .map((imputation) => imputation.imputeTimes)
         .filter((imputeTime) => imputeTime !== undefined);
       const length = imputeTimesArray[0]?.length || 0;
@@ -70,6 +87,22 @@ export const CraStore = signalStore(
         year: targetDate.getFullYear(),
       };
     }),
+    nextAvailableLineID: computed(() => {
+      const existingIds = lines().map((line) => line.id);
+      const sortedIds = existingIds.sort((a, b) => a - b);
+      let nextId = 0;
+      for (let i = 0; i < sortedIds.length; i++) {
+        if (sortedIds[i] !== i) {
+          nextId = i;
+          break;
+        }
+      }
+      if (nextId === 0 && sortedIds.length > 0) {
+        nextId = sortedIds.length;
+      }
+      return nextId;
+    }),
+
     getDaysOfCurrentMonth: deepComputed(() => {
       const current = new Date();
       const year = current.getFullYear();
@@ -140,7 +173,7 @@ export const CraStore = signalStore(
       );
     },
     addLine() {
-      const id = store.lines().length;
+      const id = store.nextAvailableLineID();
       const imputationInputs = store.getDaysOfCurrentMonth().map((item) => {
         return {
           formControlName: item.number.toString(),
@@ -177,7 +210,71 @@ export const CraStore = signalStore(
         };
       });
     },
+    resetRestDay() {
+      patchState(store, (state) => {
+        const restDayImputation = state.cra.imputations.find(
+          (imputation) => imputation.activityKey === 'repos',
+        );
+
+        if (restDayImputation) {
+          const updatedImputeTimes = restDayImputation.imputeTimes;
+          const workingDays = store.getWorkingDays();
+          if (updatedImputeTimes)
+            workingDays.forEach((index) => (updatedImputeTimes[index] = 0));
+          const updatedImputations = state.cra.imputations.map((imputation) => {
+            if (imputation.activityKey === 'repos') {
+              return {
+                ...imputation,
+                imputeTimes: updatedImputeTimes,
+              };
+            }
+            return imputation;
+          });
+          return {
+            cra: {
+              ...state.cra,
+              imputations: updatedImputations,
+            },
+          };
+        }
+        return state;
+      });
+    },
+    resetWorkingDays(componentId: number, index: number) {
+      patchState(store, (state) => {
+        const updatedImputations = state.cra.imputations.map((imputation) => {
+          if (imputation.componentId !== componentId) {
+            const updatedImputeTimes = imputation.imputeTimes
+              ? [...imputation.imputeTimes]
+              : [];
+            if (updatedImputeTimes[index] !== undefined) {
+              updatedImputeTimes[index] = 0;
+            }
+            return {
+              ...imputation,
+              imputeTimes: updatedImputeTimes,
+            };
+          }
+          return imputation;
+        });
+
+        return {
+          ...state,
+          cra: {
+            ...state.cra,
+            imputations: updatedImputations,
+          },
+        };
+      });
+    },
     updateImputation(componentId: number, newImputation: Imputation) {
+      const current = store.cra
+        .imputations()
+        .find((imputation) => imputation.componentId);
+      if (current?.activityKey !== 'repos') {
+        this.resetRestDay();
+      }
+
       patchState(store, (state) => {
         let imputations = state.cra.imputations;
         const imputation = imputations.find(

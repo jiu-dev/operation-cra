@@ -5,6 +5,7 @@ import {
   Input,
   OnChanges,
   OnInit,
+  Pipe,
   QueryList,
   SimpleChanges,
   ViewChildren,
@@ -21,8 +22,12 @@ import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
 import { ImputationInput } from '../../../core/interfaces/imputation-input.interface';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { Imputation } from '../../../core/interfaces/imputation.interface';
+import { pipe, tap } from 'rxjs';
 
 @Component({
   selector: 'app-cra-imputation-line',
@@ -36,7 +41,7 @@ import { ImputationInput } from '../../../core/interfaces/imputation-input.inter
   ],
   templateUrl: './cra-imputation-line.component.html',
 })
-export class CraImputationLineComponent implements OnInit, OnChanges {
+export class CraImputationLineComponent implements OnInit {
   @ViewChildren('dayInput') dayInputs!: QueryList<any>;
   readonly craStore = inject(CraStore);
   @Input() activities: Referential[] = [];
@@ -50,31 +55,40 @@ export class CraImputationLineComponent implements OnInit, OnChanges {
     this.initializeForm();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['id'] && !changes['id'].isFirstChange()) {
-      console.log(this.id);
-      this.initializeForm();
-    }
-  }
-
   private initializeForm(): void {
     this.imputationInputs = this.craStore.getImputationInputsById(this.id);
     this.formGroup = this.fb.group(
       this.imputationInputs.reduce(
         (acc: { [key: string]: FormControl }, input) => {
-          acc[input.formControlName] = new FormControl(input.value);
+          acc[input.formControlName] = new FormControl(input.value, [
+            Validators.pattern('^[0-9]*$'),
+          ]);
           return acc;
         },
         {},
       ),
     );
-    this.onImputationChange(this.formGroup.getRawValue());
-    this.formGroup.valueChanges.subscribe((changes) => {
-      this.onImputationChange(changes);
-    });
+    this.sendImputation(this.formGroup.getRawValue());
 
+    this.formGroup.valueChanges.subscribe((changes) => {
+      const sanitizedChanges = Object.keys(changes).reduce(
+        (acc: Record<string, string>, key) => {
+          acc[key] =
+            changes[key] === '' || isNaN(Number(changes[key]))
+              ? 0
+              : changes[key];
+          return acc;
+        },
+        {},
+      );
+
+      this.formGroup.patchValue(sanitizedChanges, { emitEvent: false });
+      this.sendImputation(sanitizedChanges);
+    });
     this.isActivitySelected();
+    this.onImputationChange(this.currentImputation);
   }
+
   getImputations() {
     return this.dayInputs.map((input) => ({
       dayKey: input.nativeElement.id,
@@ -89,16 +103,40 @@ export class CraImputationLineComponent implements OnInit, OnChanges {
     this.isActivitySelected();
   }
 
-  onImputationChange(values: { [key: string]: string }): void {
+  sendImputation(values: { [key: string]: string }): void {
     const newImputation = { imputeTimes: this.transformInputs(values) };
+
     this.craStore.updateImputation(this.id, newImputation);
   }
 
-  readonly isActivitySelected = computed(() => {
-    const imputation = this.craStore.cra
+  readonly currentImputation = computed(() => {
+    return this.craStore.cra
       .imputations()
       .find((imputation) => imputation.componentId === this.id);
-    if (imputation?.activityKey) {
+  });
+
+  readonly onImputationChange = rxMethod<Imputation | undefined>(
+    pipe(
+      tap((imputation) => {
+        if (imputation && imputation.imputeTimes) {
+          if (imputation.activityKey === 'repos') {
+            imputation.imputeTimes.forEach((imputeTime, index) => {
+              if (imputeTime > 0) {
+                this.craStore.resetWorkingDays(this.id, index);
+              }
+            });
+          }
+          this.formGroup.patchValue(
+            this.reverseTransformInputs(imputation.imputeTimes),
+            { emitEvent: false },
+          );
+        }
+      }),
+    ),
+  );
+
+  readonly isActivitySelected = computed(() => {
+    if (this.currentImputation()?.activityKey) {
       return this.formGroup.enable();
     }
     return this.formGroup.disable();
@@ -109,6 +147,14 @@ export class CraImputationLineComponent implements OnInit, OnChanges {
     for (const key in values) {
       result[parseInt(key, 10) - 1] = parseInt(values[key], 10);
     }
+    return result;
+  }
+
+  private reverseTransformInputs(values: number[]): { [key: string]: string } {
+    const result: { [key: string]: string } = {};
+    values.forEach((value, index) => {
+      result[(index + 1).toString()] = value.toString();
+    });
     return result;
   }
 

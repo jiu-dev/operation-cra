@@ -3,21 +3,18 @@ import {
   computed,
   inject,
   QueryList,
-  signal,
   ViewChildren,
 } from '@angular/core';
 import { CraStore } from '../../state/cra/cra.store';
-import { CraDayItem } from '../../core/interfaces/cra-day-item.interface';
 import { CraHeaderLineComponent } from './cra-header-line/cra-header-line.component';
 import { CraImputationLineComponent } from './cra-imputation-line/cra-imputation-line.component';
 import { SimpleButtonComponent } from '../../shared/components/button/simple-button/simple-button.component';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor } from '@angular/common';
 import { ReferentialStore } from '../../state/referential/referential.store';
-import { Signal } from '@ngrx/signals/src/deep-signal';
 import { CraUtil } from '../../core/utils/cra.util';
 import { AgentSelectorComponent } from './agent-selector/agent-selector.component';
 import { ActivatedRoute } from '@angular/router';
-import { map, pipe, Subscription, tap } from 'rxjs';
+import { pipe, Subscription, tap } from 'rxjs';
 import { AgentStore } from '../../state/agent/agent.store';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { CraTotalLineComponent } from './cra-total-line/cra-total-line.component';
