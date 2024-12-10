@@ -9,7 +9,7 @@ import {
   withState,
 } from '@ngrx/signals';
 import { CraState } from './cra.type';
-import { computed, inject, Pipe } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { CraDayItem } from '../../core/interfaces/cra-day-item.interface';
 import { FrMonthNames } from '../../core/enums/fr-months-name.enum';
 import { AgentService } from '../../core/services/agent.service';
@@ -306,45 +306,19 @@ export const CraStore = signalStore(
     selectAgent(key: string) {
       patchState(store, (state) => ({ ...state, selectedAgentKey: key }));
     },
-    sendCra(
-      imputationMetadatas: { lineId: number; imputationArray: number[] }[],
-    ) {
-      //   const craDate = store.getMonthAndYearFromOffset();
-      //   console.log(craDate);
-      //   console.log(`${craDate.month}/${craDate.year}`);
-      //   const craItem = imputationMetadatas
-      //     .map((metadata) => {
-      //       const activity = store
-      //         .lines()
-      //         .find((line) => line.id === metadata.lineId);
-      //       if (!activity || !activity.refKey) {
-      //         return;
-      //       }
-      //       return {
-      //         activityKey: activity.refKey,
-      //         imputeTimes: metadata.imputationArray,
-      //       };
-      //     })
-      //     .filter(
-      //       (item): item is { activityKey: string; imputeTimes: number[] } =>
-      //         item !== undefined,
-      //     );
-      //   const cra = {
-      //     month: craDate.month,
-      //     year: craDate.year,
-      //     imputations: craItem,
-      //   };
-      //
-      //   agentService.addCra(store.selectedAgentKey(), cra);
+    sendCra() {
+      const craDate = store.getMonthAndYearFromOffset();
+      const cra = {
+        month: craDate.month,
+        year: craDate.year,
+        imputations: store.cra().imputations,
+      };
+      agentService.addCra(store.selectedAgentKey(), cra);
     },
   })),
   withHooks({
     onInit(store) {
-      watchState(store, (state) => {
-        console.log('Actual Lines', state.lines);
-        console.log('Actual Cra', state.cra);
-        console.log('Total Sum', store.getImputationsSum());
-      });
+      watchState(store, (state) => {});
     },
   }),
 );

@@ -1,10 +1,11 @@
 <app-agent-selector></app-agent-selector>
 <div class="flex flex-col gap-4 p-4 bg-white">
   <app-cra-header-line [days]="craHeader()"></app-cra-header-line>
-  <ng-container *ngFor="let line of craLines()">
+  <ng-container *ngFor="let line of craLines(); let i = index">
     <app-cra-imputation-line
       [activities]="activities()"
       [id]="line.id"
+      (validityChange)="onChildValidityChange(i, $event)"
     ></app-cra-imputation-line>
   </ng-container>
 
@@ -18,7 +19,12 @@
     >
       Ajouter une ligne
     </app-simple-button>
-    <app-simple-button size="md" variant="primary" (onClick)="validateCra()">
+    <app-simple-button
+      size="md"
+      variant="primary"
+      [disabled]="!allFormsValid"
+      (onClick)="validateCra()"
+    >
       Valider
     </app-simple-button>
   </div>

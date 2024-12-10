@@ -11,7 +11,6 @@ import { CraImputationLineComponent } from './cra-imputation-line/cra-imputation
 import { SimpleButtonComponent } from '../../shared/components/button/simple-button/simple-button.component';
 import { NgFor } from '@angular/common';
 import { ReferentialStore } from '../../state/referential/referential.store';
-import { CraUtil } from '../../core/utils/cra.util';
 import { AgentSelectorComponent } from './agent-selector/agent-selector.component';
 import { ActivatedRoute } from '@angular/router';
 import { pipe, Subscription, tap } from 'rxjs';
@@ -52,6 +51,8 @@ export class AgentPlanningComponent {
     );
   });
 
+  formsValidity: boolean[] = [];
+
   readonly canAddLine = computed(() => {
     return (
       this.craLines().length > 0 &&
@@ -78,44 +79,15 @@ export class AgentPlanningComponent {
     this.updateCra(this.craStore.monthOffset);
   }
 
-  validateCra(): void {
-    // const activities = this.craImputationComponents.map((component) => {
-    //   const key = this.craStore.getActivityKeyById(component.id);
-    //   return {
-    //     activityKey: key || '',
-    //     imputationArray: component.getImputations().map((item) => {
-    //       return item.imputationTime;
-    //     }),
-    //   };
-    // });
-    // const restDayErrors = CraUtil.validateRestDays(activities, 'repos');
-    // const effortErrors = CraUtil.validateEffort(activities, 2);
-    //
-    // const hasRestDayErrors = Object.values(restDayErrors).some(
-    //   (indexes) => indexes.length > 0,
-    // );
-    // const hasEffortErrors = Object.values(effortErrors).some(
-    //   (indexes) => indexes.length > 0,
-    // );
-    //
-    // if (hasRestDayErrors || hasEffortErrors) {
-    //   console.log('Il y a au moins une erreur dans les validations.');
-    //   console.log(effortErrors);
-    // } else {
-    //   console.log('Aucune erreur détectée.');
-    // }
+  get allFormsValid(): boolean {
+    return this.formsValidity.every((isValid) => isValid);
+  }
 
-    const imputationMetadatas = this.craImputationComponents.map(
-      (component) => {
-        return {
-          lineId: component.id,
-          imputationArray: CraUtil.createImputationArray(
-            component.getImputations(),
-          ),
-        };
-      },
-    );
-    this.craStore.sendCra(imputationMetadatas);
+  onChildValidityChange(index: number, isValid: boolean): void {
+    this.formsValidity[index] = isValid;
+  }
+  validateCra(): void {
+    this.craStore.sendCra();
   }
 
   addImputationLine(): void {

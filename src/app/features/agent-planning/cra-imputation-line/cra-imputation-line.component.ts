@@ -1,13 +1,12 @@
 import {
   Component,
   computed,
+  EventEmitter,
   inject,
   Input,
-  OnChanges,
   OnInit,
-  Pipe,
+  Output,
   QueryList,
-  SimpleChanges,
   ViewChildren,
 } from '@angular/core';
 import { CraDaysLineComponent } from '../cra-days-line/cra-days-line.component';
@@ -46,11 +45,12 @@ export class CraImputationLineComponent implements OnInit {
   readonly craStore = inject(CraStore);
   @Input() activities: Referential[] = [];
   @Input() id: number = 0;
+  @Output() validityChange = new EventEmitter<boolean>();
   formGroup!: FormGroup;
-
   imputationInputs: ImputationInput[] = [];
 
   constructor(private fb: FormBuilder) {}
+
   ngOnInit(): void {
     this.initializeForm();
   }
@@ -69,7 +69,10 @@ export class CraImputationLineComponent implements OnInit {
       ),
     );
     this.sendImputation(this.formGroup.getRawValue());
-
+    this.validityChange.emit(this.formGroup.valid);
+    this.formGroup.statusChanges.subscribe(() => {
+      this.validityChange.emit(this.formGroup.valid);
+    });
     this.formGroup.valueChanges.subscribe((changes) => {
       const sanitizedChanges = Object.keys(changes).reduce(
         (acc: Record<string, string>, key) => {
@@ -160,15 +163,5 @@ export class CraImputationLineComponent implements OnInit {
 
   onDeleteActivity(): void {
     this.craStore.deleteLine(this.id);
-  }
-
-  isWeekend(key: string) {
-    switch (key) {
-      case FrDaysKey.Samedi:
-      case FrDaysKey.Dimanche:
-        return true;
-      default:
-        return false;
-    }
   }
 }
