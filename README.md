@@ -1,6 +1,7 @@
 # Opération CRA - Application de Gestion des Comptes Rendus d'Activité
 
 Bienvenue dans l'application **Opération CRA**, une solution Angular pour gérer les plannings de mission de trois agents spéciaux.
+![CRA](src/assets/cra.png "operation cra")
 
 ## Prérequis
 
