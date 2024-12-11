@@ -1,8 +1,8 @@
 import { Component, inject, Input, signal, Signal } from '@angular/core';
-import { CraDaysLineComponent } from '../cra-days-line/cra-days-line.component';
 import { CraDayItem } from '../../../core/interfaces/cra-day-item.interface';
 import { MonthPickerComponent } from '../../../shared/components/calendar/month-picker/month-picker.component';
 import { CraStore } from '../../../state/cra/cra.store';
+import { CraDaysLineComponent } from '../../../shared/components/cra-days-line/cra-days-line.component';
 
 @Component({
   selector: 'app-cra-header-line',

@@ -10,6 +10,7 @@ import { AgentService } from '../../core/services/agent.service';
 import { computed, inject } from '@angular/core';
 
 const initialState: AgentState = {
+  agentKey: '',
   personalInformations: {
     firstName: '',
     lastName: '',
@@ -27,11 +28,12 @@ export const AgentStore = signalStore(
     ),
   })),
   withMethods((store, agentService = inject(AgentService)) => ({
-    async loadAgent(id: string): Promise<void> {
+    async loadAgent(agentKey: string): Promise<void> {
       patchState(store, { isLoading: true });
-      const agent = await agentService.getAgent(id);
+      const agent = await agentService.getAgent(agentKey);
       if (agent)
         patchState(store, {
+          agentKey,
           personalInformations: {
             firstName: agent.firstName,
             lastName: agent.lastName,

@@ -1,31 +1,38 @@
-<app-agent-selector></app-agent-selector>
-<div class="flex flex-col gap-4 p-4 bg-white">
-  <app-cra-header-line [days]="craHeader()"></app-cra-header-line>
-  <ng-container *ngFor="let line of craLines(); let i = index">
-    <app-cra-imputation-line
-      [activities]="activities()"
-      [id]="line.id"
-      (validityChange)="onChildValidityChange(i, $event)"
-    ></app-cra-imputation-line>
-  </ng-container>
-
-  <app-cra-total-line></app-cra-total-line>
-  <div class="flex justify-center gap-2 w-full">
-    <app-simple-button
-      size="md"
-      variant="secondary"
-      [disabled]="canAddLine()"
-      (onClick)="addImputationLine()"
-    >
-      Ajouter une ligne
-    </app-simple-button>
-    <app-simple-button
-      size="md"
-      variant="primary"
-      [disabled]="!allFormsValid"
-      (onClick)="validateCra()"
-    >
-      Valider
-    </app-simple-button>
+<div
+  class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow-sm"
+>
+  <div class="px-4 py-5 sm:px-6">
+    <app-agent-selector></app-agent-selector>
+  </div>
+  <div class="flex flex-col gap-3 px-4 py-5 sm:p-6">
+    <app-cra-header-line [days]="craHeader()"></app-cra-header-line>
+    <ng-container *ngFor="let line of craLines(); let i = index">
+      <app-cra-imputation-line
+        [activities]="activities()"
+        [id]="line.id"
+        (validityChange)="onChildValidityChange(i, $event)"
+      ></app-cra-imputation-line>
+    </ng-container>
+    <app-cra-total-line></app-cra-total-line>
+  </div>
+  <div class="px-4 py-4 sm:px-6">
+    <div class="flex justify-center gap-2 w-full">
+      <app-simple-button
+        size="md"
+        variant="secondary"
+        [disabled]="canAddLine()"
+        (onClick)="addImputationLine()"
+      >
+        Ajouter une ligne
+      </app-simple-button>
+      <app-simple-button
+        size="md"
+        variant="primary"
+        [disabled]="!allFormsValid"
+        (onClick)="validateCra()"
+      >
+        Valider
+      </app-simple-button>
+    </div>
   </div>
 </div>

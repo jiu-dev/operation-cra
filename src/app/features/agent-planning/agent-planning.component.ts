@@ -2,21 +2,22 @@ import {
   Component,
   computed,
   inject,
+  OnDestroy,
   QueryList,
   ViewChildren,
 } from '@angular/core';
 import { CraStore } from '../../state/cra/cra.store';
-import { CraHeaderLineComponent } from './cra-header-line/cra-header-line.component';
 import { CraImputationLineComponent } from './cra-imputation-line/cra-imputation-line.component';
 import { SimpleButtonComponent } from '../../shared/components/button/simple-button/simple-button.component';
 import { NgFor } from '@angular/common';
 import { ReferentialStore } from '../../state/referential/referential.store';
 import { AgentSelectorComponent } from './agent-selector/agent-selector.component';
 import { ActivatedRoute } from '@angular/router';
-import { pipe, Subscription, tap } from 'rxjs';
+import { combineLatest, Subject, Subscription, takeUntil } from 'rxjs';
 import { AgentStore } from '../../state/agent/agent.store';
-import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { CraTotalLineComponent } from './cra-total-line/cra-total-line.component';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { CraHeaderLineComponent } from '../../shared/components/cra-header-line/cra-header-line.component';
 
 @Component({
   selector: 'app-agent-planning',
@@ -31,7 +32,8 @@ import { CraTotalLineComponent } from './cra-total-line/cra-total-line.component
   ],
   templateUrl: './agent-planning.component.html',
 })
-export class AgentPlanningComponent {
+export class AgentPlanningComponent implements OnDestroy {
+  private destroy$ = new Subject<void>();
   @ViewChildren(CraImputationLineComponent)
   craImputationComponents!: QueryList<CraImputationLineComponent>;
 
@@ -51,6 +53,8 @@ export class AgentPlanningComponent {
     );
   });
 
+  readonly monthOffset$ = toObservable(this.craStore.monthOffset);
+  readonly agentKey$ = toObservable(this.craStore.selectedAgentKey);
   formsValidity: boolean[] = [];
 
   readonly canAddLine = computed(() => {
@@ -59,10 +63,6 @@ export class AgentPlanningComponent {
       this.craLines().length === this.refActivities().length
     );
   });
-
-  private readonly updateCra = rxMethod<number>(
-    pipe(tap(() => this.craStore.initCra())),
-  );
 
   private routeSubscription!: Subscription;
   constructor(private route: ActivatedRoute) {}
@@ -76,7 +76,13 @@ export class AgentPlanningComponent {
       }
     });
     this.referentialStore.loadActivities();
-    this.updateCra(this.craStore.monthOffset);
+    combineLatest([this.monthOffset$, this.agentKey$])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(([monthOffset, agentKey]) => {
+        console.log(`Mois: ${monthOffset}, Agent: ${agentKey}`);
+        this.craStore.loadCraByAgentKey({ agentKey, monthOffset });
+        this.craStore.initCra();
+      });
   }
 
   get allFormsValid(): boolean {
@@ -98,5 +104,7 @@ export class AgentPlanningComponent {
     if (this.routeSubscription) {
       this.routeSubscription.unsubscribe();
     }
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

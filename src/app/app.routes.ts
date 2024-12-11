@@ -19,13 +19,6 @@ export const routes: Routes = [
     component: AgentPlanningComponent,
   },
   {
-    path: 'missions',
-    loadComponent: () =>
-      import('./features/mission-manager/mission-manager.component').then(
-        (m) => m.MissionManagerComponent,
-      ),
-  },
-  {
     path: '**',
     redirectTo: 'dashboard',
   },

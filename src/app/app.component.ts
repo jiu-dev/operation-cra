@@ -7,7 +7,6 @@ import { RouterOutlet } from '@angular/router';
   templateUrl: './app.component.html',
   imports: [SidebarContainerComponent, RouterOutlet],
   standalone: true,
-  styleUrl: './app.component.scss',
 })
 export class AppComponent {
   title = 'CRA-Management';

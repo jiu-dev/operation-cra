@@ -9,12 +9,10 @@ import {
   QueryList,
   ViewChildren,
 } from '@angular/core';
-import { CraDaysLineComponent } from '../cra-days-line/cra-days-line.component';
 import { SelectInputComponent } from '../../../shared/components/form/select-input/select-input.component';
 import { Referential } from '../../../core/interfaces/referential.interface';
 import { CraStore } from '../../../state/cra/cra.store';
 import { CircularButtonComponent } from '../../../shared/components/button/circular-button/circular-button.component';
-import { FrDaysKey } from '../../../core/enums/fr-days-name.enum';
 import { NgClass } from '@angular/common';
 import {
   FormBuilder,
@@ -27,6 +25,8 @@ import { ImputationInput } from '../../../core/interfaces/imputation-input.inter
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { Imputation } from '../../../core/interfaces/imputation.interface';
 import { pipe, tap } from 'rxjs';
+import { ReferentialStore } from '../../../state/referential/referential.store';
+import { CraDaysLineComponent } from '../../../shared/components/cra-days-line/cra-days-line.component';
 
 @Component({
   selector: 'app-cra-imputation-line',
@@ -43,6 +43,7 @@ import { pipe, tap } from 'rxjs';
 export class CraImputationLineComponent implements OnInit {
   @ViewChildren('dayInput') dayInputs!: QueryList<any>;
   readonly craStore = inject(CraStore);
+  readonly refStore = inject(ReferentialStore);
   @Input() activities: Referential[] = [];
   @Input() id: number = 0;
   @Output() validityChange = new EventEmitter<boolean>();
@@ -54,6 +55,17 @@ export class CraImputationLineComponent implements OnInit {
   ngOnInit(): void {
     this.initializeForm();
   }
+
+  readonly selectedOption = computed(() => {
+    const activityKey = this.craStore.selectedActivity(this.id);
+    const referential = this.refStore
+      .activities()
+      .find((ref) => ref.key === activityKey);
+    return {
+      key: referential?.key || '',
+      label: referential?.label || '',
+    };
+  });
 
   private initializeForm(): void {
     this.imputationInputs = this.craStore.getImputationInputsById(this.id);
@@ -76,10 +88,11 @@ export class CraImputationLineComponent implements OnInit {
     this.formGroup.valueChanges.subscribe((changes) => {
       const sanitizedChanges = Object.keys(changes).reduce(
         (acc: Record<string, string>, key) => {
+          const value = changes[key];
           acc[key] =
-            changes[key] === '' || isNaN(Number(changes[key]))
-              ? 0
-              : changes[key];
+            value === '' || isNaN(Number(value))
+              ? '0'
+              : Math.min(Number(value), 7).toString();
           return acc;
         },
         {},

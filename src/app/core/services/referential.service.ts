@@ -27,15 +27,15 @@ export class ReferentialService {
     agents: [
       {
         key: 'jkdsvhskjbvsfhb',
-        label: 'John Doe',
+        label: 'James Bond',
       },
       {
         key: 'vhjksfkjvhfkjgh',
-        label: 'Antoine Marechal',
+        label: 'Mata Hari',
       },
       {
         key: 'hjkfhsdjkghkgdd',
-        label: 'James Web',
+        label: 'Virginia Hall',
       },
     ],
   };
@@ -46,7 +46,7 @@ export class ReferentialService {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(this.mockData.agents); // Simulate network latency
-      }, 500);
+      }, 0);
     });
   }
 
@@ -54,7 +54,7 @@ export class ReferentialService {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(this.mockData.activities); // Simulate network latency
-      }, 500);
+      }, 0);
     });
   }
 }

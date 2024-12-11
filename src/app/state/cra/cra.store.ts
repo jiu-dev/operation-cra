@@ -1,5 +1,4 @@
 import {
-  deepComputed,
   patchState,
   signalStore,
   watchState,
@@ -10,12 +9,19 @@ import {
 } from '@ngrx/signals';
 import { CraState } from './cra.type';
 import { computed, inject } from '@angular/core';
-import { CraDayItem } from '../../core/interfaces/cra-day-item.interface';
-import { FrMonthNames } from '../../core/enums/fr-months-name.enum';
 import { AgentService } from '../../core/services/agent.service';
 import { ImputationInput } from '../../core/interfaces/imputation-input.interface';
 import { Imputation } from '../../core/interfaces/imputation.interface';
+import { distinctUntilChanged, pipe, switchMap, tap } from 'rxjs';
+import { rxMethod } from '@ngrx/signals/rxjs-interop';
+import { tapResponse } from '@ngrx/operators';
+import { getWorkingDays } from '../shared-computed/get-working-days.computed';
+import { getImputationsSum } from '../shared-computed/get-imputation-sum.computed';
+import { canNavigate } from '../shared-computed/can-navigate.computed';
+import { getCurrentMonthName } from '../shared-computed/get-current-month-name.computed';
+import { getDaysOfCurrentMonth } from '../shared-computed/get-days-of-current-month.computed';
 
+const initialCra = { imputations: [] };
 const initialState: CraState = {
   monthRange: -3,
   monthOffset: 0,
@@ -30,52 +36,11 @@ export const CraStore = signalStore(
   { providedIn: 'root' },
   withState(initialState),
   withComputed(({ monthOffset, monthRange, cra, lines }) => ({
-    canNavigate: computed(() => {
-      const offset = monthOffset();
-      const range = monthRange();
-
-      const previous = range < 0 ? offset - 1 > range : offset > 0;
-      const next = range < 0 ? offset < 0 : offset + 1 < range;
-
-      return { previous, next };
-    }),
-    getCurrentMonthName: computed(() => {
-      const date = new Date();
-      date.setMonth(date.getMonth() + monthOffset());
-      const monthIndex = date.getMonth();
-      return Object.values(FrMonthNames)[monthIndex];
-    }),
-    getWorkingDays: computed(() => {
-      const imputeTimesArray = cra
-        .imputations()
-        .filter((imputation) => imputation.activityKey === 'repos')
-        .map((imputation) => imputation.imputeTimes)
-        .filter((imputeTime) => imputeTime !== undefined);
-      const workingDays = [];
-      for (const imputeTime of imputeTimesArray) {
-        for (let i = 0; i < imputeTime.length; i++) {
-          if (imputeTime[i] !== 0) {
-            workingDays.push(i);
-          }
-        }
-      }
-      return workingDays;
-    }),
-    getImputationsSum: computed(() => {
-      const imputeTimesArray = cra
-        .imputations()
-        .filter((imputation) => imputation.activityKey !== 'repos')
-        .map((imputation) => imputation.imputeTimes)
-        .filter((imputeTime) => imputeTime !== undefined);
-      const length = imputeTimesArray[0]?.length || 0;
-      const imputationsSum = new Array(length).fill(0);
-      for (const imputeTime of imputeTimesArray) {
-        for (let i = 0; i < length; i++) {
-          imputationsSum[i] += imputeTime[i];
-        }
-      }
-      return imputationsSum;
-    }),
+    canNavigate: canNavigate(monthOffset, monthRange),
+    getCurrentMonthName: getCurrentMonthName(monthOffset),
+    getWorkingDays: getWorkingDays(cra),
+    getImputationsSum: getImputationsSum(cra),
+    getDaysOfCurrentMonth: getDaysOfCurrentMonth(monthOffset),
     getMonthAndYearFromOffset: computed(() => {
       const current = new Date();
       const currentYear = current.getFullYear();
@@ -102,28 +67,6 @@ export const CraStore = signalStore(
       }
       return nextId;
     }),
-
-    getDaysOfCurrentMonth: deepComputed(() => {
-      const current = new Date();
-      const year = current.getFullYear();
-      const month = current.getMonth() + monthOffset();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const days: CraDayItem[] = [];
-      const options: Intl.DateTimeFormatOptions = { weekday: 'short' };
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        const dayKey = new Intl.DateTimeFormat('fr-FR', options).format(date);
-        const letter = dayKey[0].toUpperCase();
-        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        days.push({
-          key: dayKey,
-          letter,
-          number: day,
-          isWeekend,
-        });
-      }
-      return days;
-    }),
   })),
   withMethods((store, agentService = inject(AgentService)) => ({
     updateMonthOffset(monthDirection: number) {
@@ -140,19 +83,49 @@ export const CraStore = signalStore(
       });
     },
     initCra() {
-      this.resetCra();
       const imputationInputs = store.getDaysOfCurrentMonth().map((item) => {
         return {
           formControlName: item.number.toString(),
           isWeekEnd: item.isWeekend,
-          value: item.isWeekend ? '0' : '1',
+          value: '0',
         } as ImputationInput;
       });
+
+      const cra = store.cra();
+      const currentImputations = cra.imputations;
+      console.log(cra);
+      let newLines;
+      console.log(currentImputations);
+      if (currentImputations.length > 0) {
+        console.log('jesuisla');
+        newLines = currentImputations.map((imputation) => {
+          const imputeTimes = imputation.imputeTimes;
+          if (imputeTimes) {
+            const newImputationInputs = imputeTimes.map((time, index) => ({
+              formControlName: (index + 1).toString(),
+              isWeekEnd: this.isWeekEnd(index + 1),
+              value: time.toString(),
+            }));
+            return {
+              id: imputation.componentId || 0,
+              imputationInputs: newImputationInputs,
+            };
+          }
+          return {
+            id: imputation.componentId || 0,
+            imputationInputs: [],
+          };
+        });
+      } else {
+        newLines = [{ id: 0, imputationInputs }];
+      }
+
+      console.log('newLines', newLines);
       patchState(store, (state) => {
         return {
           ...state,
           header: store.getDaysOfCurrentMonth(),
-          lines: [{ id: 0, imputationInputs }],
+          lines: newLines,
         };
       });
     },
@@ -171,6 +144,13 @@ export const CraStore = signalStore(
       throw new Error(
         `There is no activity bind to the component with the ID : ${componentId}`,
       );
+    },
+    selectedActivity(componentId: number) {
+      return store
+        .cra()
+        .imputations.find(
+          (imputation) => imputation.componentId === componentId,
+        )?.activityKey;
     },
     addLine() {
       const id = store.nextAvailableLineID();
@@ -192,9 +172,6 @@ export const CraStore = signalStore(
           lines: [...state.lines.filter((line) => line.id !== componentId)],
         };
       });
-    },
-    resetCra() {
-      patchState(store, (state) => ({ ...state, cra: { imputations: [] } }));
     },
     deleteImputation(componentId: number) {
       patchState(store, (state) => {
@@ -315,10 +292,46 @@ export const CraStore = signalStore(
       };
       agentService.addCra(store.selectedAgentKey(), cra);
     },
+    isWeekEnd(day: number) {
+      const current = new Date();
+      const year = current.getFullYear();
+      const month = current.getMonth() + store.monthOffset();
+      const date = new Date(year, month, day);
+      return date.getDay() === 0 || date.getDay() === 6;
+    },
+    loadCraByAgentKey: rxMethod<{ agentKey: string; monthOffset: number }>(
+      pipe(
+        distinctUntilChanged(),
+        tap(() => patchState(store, { isLoading: true })),
+        switchMap((emitValue) => {
+          return agentService
+            .getCrasByAgentKeyAndMonthOffset(
+              emitValue.agentKey,
+              emitValue.monthOffset,
+            )
+            .pipe(
+              tapResponse({
+                next: (cra) =>
+                  patchState(store, (state) => ({
+                    ...state,
+                    cra: cra ? cra : initialCra,
+                  })),
+                error: console.error,
+                finalize: () => {
+                  patchState(store, { isLoading: false });
+                },
+              }),
+            );
+        }),
+      ),
+    ),
   })),
   withHooks({
     onInit(store) {
-      watchState(store, (state) => {});
+      watchState(store, (state) => {
+        console.log(state.cra);
+        console.log(state.lines);
+      });
     },
   }),
 );

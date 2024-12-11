@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ModalComponent } from './modal.component';
+import { AgentDiffComponent } from './agent-diff.component';
 
-describe('ModalComponent', () => {
-  let component: ModalComponent;
-  let fixture: ComponentFixture<ModalComponent>;
+describe('AgentDiffComponent', () => {
+  let component: AgentDiffComponent;
+  let fixture: ComponentFixture<AgentDiffComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ModalComponent]
+      imports: [AgentDiffComponent]
     })
     .compileComponents();
-    
-    fixture = TestBed.createComponent(ModalComponent);
+
+    fixture = TestBed.createComponent(AgentDiffComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -23,6 +23,7 @@
       <app-select-input
         [options]="activities"
         [placeholder]="'Activite'"
+        [selectedOption]="selectedOption()"
         (optionSelected)="onSelectActivity($event)"
       ></app-select-input>
     </div>
