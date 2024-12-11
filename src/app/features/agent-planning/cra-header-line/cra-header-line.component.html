@@ -1,19 +1,6 @@
-<div class="flex items-center">
-  <div class="min-w-44 px-2 flex justify-end">
-    <app-month-picker
-      [currentMonthName]="currentMonthName()"
-      [displayNext]="canNavigate().next"
-      [displayPrev]="canNavigate().previous"
-      (next)="navigate(1)"
-      (prev)="navigate(-1)"
-    ></app-month-picker>
-  </div>
-  <ng-template #labelTemplate let-day>
-    <span class="text-md font-bold">{{ day.letter }}</span>
-    <span class="text-sm text-gray-500">{{ day.number }}</span>
-  </ng-template>
-  <app-cra-days-line
-    [items]="days"
-    [template]="labelTemplate"
-  ></app-cra-days-line>
-</div>
+<app-header-line
+  [days]="days"
+  [currentMonthName]="currentMonthName"
+  [canNavigate]="canNavigate"
+  (navigate)="navigate($event)"
+></app-header-line>

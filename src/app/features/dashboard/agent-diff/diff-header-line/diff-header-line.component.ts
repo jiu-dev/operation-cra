@@ -1,23 +1,26 @@
 import { Component, inject, Input } from '@angular/core';
-import { CraDayItem } from '../../../../core/interfaces/cra-day-item.interface';
 import { AgentDiffStore } from '../../../../state/agent-diff/agent-diff.store';
-import { CraDaysLineComponent } from '../../../../shared/components/cra-days-line/cra-days-line.component';
-import { MonthPickerComponent } from '../../../../shared/components/calendar/month-picker/month-picker.component';
+import { BaseHeaderLineComponent } from '../../../../core/abstracts/base-header-line.component';
+import { HeaderLineComponent } from '../../../../shared/components/header-line/header-line.component';
 
 @Component({
   selector: 'app-diff-header-line',
   standalone: true,
-  imports: [MonthPickerComponent, CraDaysLineComponent],
+  imports: [HeaderLineComponent],
   templateUrl: './diff-header-line.component.html',
 })
-export class DiffHeaderLineComponent {
-  readonly agentDiffStore = inject(AgentDiffStore);
-  @Input() days: CraDayItem[] = [];
+export class DiffHeaderLineComponent extends BaseHeaderLineComponent {
+  private readonly agentDiffStore = inject(AgentDiffStore);
 
-  readonly currentMonthName = this.agentDiffStore.getCurrentMonthName;
-  readonly canNavigate = this.agentDiffStore.canNavigate;
+  get currentMonthName(): string {
+    return this.agentDiffStore.getCurrentMonthName();
+  }
 
-  navigate(monthDirection: number) {
+  get canNavigate(): { next: boolean; previous: boolean } {
+    return this.agentDiffStore.canNavigate();
+  }
+
+  navigate(monthDirection: number): void {
     this.agentDiffStore.updateMonthOffset(monthDirection);
   }
 }
