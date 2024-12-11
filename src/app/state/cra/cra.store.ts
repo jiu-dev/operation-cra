@@ -185,37 +185,6 @@ export const CraStore = signalStore(
         };
       });
     },
-    resetRestDay() {
-      patchState(store, (state) => {
-        const restDayImputation = state.cra.imputations.find(
-          (imputation) => imputation.activityKey === 'repos',
-        );
-
-        if (restDayImputation) {
-          const updatedImputeTimes = restDayImputation.imputeTimes;
-          const workingDays = store.getWorkingDays();
-          if (updatedImputeTimes) {
-            workingDays.forEach((index) => (updatedImputeTimes[index] = 0));
-          }
-          const updatedImputations = state.cra.imputations.map((imputation) => {
-            if (imputation.activityKey === 'repos') {
-              return {
-                ...imputation,
-                imputeTimes: updatedImputeTimes,
-              };
-            }
-            return imputation;
-          });
-          return {
-            cra: {
-              ...state.cra,
-              imputations: updatedImputations,
-            },
-          };
-        }
-        return state;
-      });
-    },
     resetWorkingDays(componentId: number, index: number) {
       patchState(store, (state) => {
         const updatedImputations = state.cra.imputations.map((imputation) => {
@@ -243,14 +212,47 @@ export const CraStore = signalStore(
         };
       });
     },
-    updateImputation(componentId: number, newImputation: Imputation) {
-      const current = store.cra
-        .imputations()
-        .find((imputation) => imputation.componentId);
-      if (current?.activityKey !== 'repos') {
-        this.resetRestDay();
+    getUpdatedImputeTimeIndex(imputation: number[], newImputation: number[]) {
+      for (let i = 0; i < imputation.length; i++) {
+        if (imputation[i] !== newImputation[i]) {
+          console.log('index change');
+          return i;
+        }
       }
+      console.log('index unchange');
+      return;
+    },
+    resetRestDay(workDayIndex: number) {
+      patchState(store, (state) => {
+        let restDayImputation = state.cra.imputations.find(
+          (imputation) => imputation.activityKey === 'repos',
+        );
 
+        if (restDayImputation) {
+          const updatedImputeTimes = restDayImputation.imputeTimes;
+          if (updatedImputeTimes) {
+            updatedImputeTimes[workDayIndex] = 0;
+          }
+          const updatedImputations = state.cra.imputations.map((imputation) => {
+            if (imputation.activityKey === 'repos') {
+              return {
+                ...imputation,
+                imputeTimes: updatedImputeTimes,
+              };
+            }
+            return imputation;
+          });
+          return {
+            cra: {
+              ...state.cra,
+              imputations: updatedImputations,
+            },
+          };
+        }
+        return state;
+      });
+    },
+    updateImputation(componentId: number, newImputation: Imputation) {
       patchState(store, (state) => {
         let imputations = state.cra.imputations;
         const imputation = imputations.find(
@@ -270,7 +272,6 @@ export const CraStore = signalStore(
             componentId,
           };
         }
-
         imputations.push(newImputation);
         return {
           cra: {
@@ -327,7 +328,9 @@ export const CraStore = signalStore(
   })),
   withHooks({
     onInit(store) {
-      watchState(store, (state) => {});
+      watchState(store, (state) => {
+        // console.log(state.cra);
+      });
     },
   }),
 );

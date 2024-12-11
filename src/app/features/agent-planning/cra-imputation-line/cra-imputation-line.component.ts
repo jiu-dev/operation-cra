@@ -24,7 +24,7 @@ import {
 import { ImputationInput } from '../../../core/interfaces/imputation-input.interface';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { Imputation } from '../../../core/interfaces/imputation.interface';
-import { pipe, tap } from 'rxjs';
+import { map, pairwise, pipe, tap } from 'rxjs';
 import { ReferentialStore } from '../../../state/referential/referential.store';
 import { CraDaysLineComponent } from '../../../shared/components/cra-days-line/cra-days-line.component';
 
@@ -134,18 +134,33 @@ export class CraImputationLineComponent implements OnInit {
   readonly onImputationChange = rxMethod<Imputation | undefined>(
     pipe(
       tap((imputation) => {
-        if (imputation && imputation.imputeTimes) {
-          if (imputation.activityKey === 'repos') {
-            imputation.imputeTimes.forEach((imputeTime, index) => {
-              if (imputeTime > 0) {
-                this.craStore.resetWorkingDays(this.id, index);
-              }
-            });
-          }
+        if (imputation?.imputeTimes) {
           this.formGroup.patchValue(
             this.reverseTransformInputs(imputation.imputeTimes),
             { emitEvent: false },
           );
+        }
+      }),
+      pairwise(),
+      map(([oldImputation, newImputation]) => {
+        const isValidImputation =
+          oldImputation?.imputeTimes &&
+          newImputation?.imputeTimes &&
+          newImputation?.componentId;
+
+        if (!isValidImputation) return;
+
+        const index = this.craStore.getUpdatedImputeTimeIndex(
+          oldImputation.imputeTimes!,
+          newImputation.imputeTimes!,
+        );
+
+        if (index === undefined) return;
+
+        if (oldImputation.activityKey !== 'repos') {
+          this.craStore.resetRestDay(index);
+        } else {
+          this.craStore.resetWorkingDays(newImputation.componentId!, index);
         }
       }),
     ),
