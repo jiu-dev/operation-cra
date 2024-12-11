@@ -93,12 +93,9 @@ export const CraStore = signalStore(
 
       const cra = store.cra();
       const currentImputations = cra.imputations;
-      console.log('commence', cra);
       let newLines;
       if (currentImputations.length > 0) {
-        console.log(currentImputations.length);
         newLines = currentImputations.map((imputation) => {
-          console.log(imputation.activityKey);
           const imputeTimes = imputation.imputeTimes;
           if (imputeTimes) {
             const newImputationInputs = imputationInputs.map((input, index) => {
@@ -120,10 +117,8 @@ export const CraStore = signalStore(
         });
       } else {
         newLines = [{ id: 0, imputationInputs }];
-        console.log('intoElse', newLines);
       }
 
-      console.log('newLines', newLines);
       patchState(store, (state) => {
         return {
           ...state,
@@ -200,7 +195,6 @@ export const CraStore = signalStore(
           const updatedImputeTimes = restDayImputation.imputeTimes;
           const workingDays = store.getWorkingDays();
           if (updatedImputeTimes) {
-            console.log(updatedImputeTimes);
             workingDays.forEach((index) => (updatedImputeTimes[index] = 0));
           }
           const updatedImputations = state.cra.imputations.map((imputation) => {
@@ -321,7 +315,6 @@ export const CraStore = signalStore(
                     ...state,
                     cra: cra ? cra : initialCra,
                   })),
-                error: console.error,
                 finalize: () => {
                   patchState(store, { isLoading: false });
                 },

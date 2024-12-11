@@ -18,8 +18,6 @@ export class CraHeaderLineComponent {
   readonly canNavigate = this.craStore.canNavigate;
 
   navigate(monthDirection: number) {
-    console.log('CRA MONTH PICKER');
-
     this.craStore.updateMonthOffset(monthDirection);
   }
 }

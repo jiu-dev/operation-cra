@@ -59,7 +59,6 @@ export class AgentService {
       };
     });
     // Log the result for debugging
-    console.log('Agents with filtered CRAs:', agentsWithFilteredCras);
     return of(agentsWithFilteredCras);
   }
 
@@ -151,7 +150,6 @@ export class AgentService {
     // Met à jour la liste des agents
     agents = agents.map((item) => (item.id === agentKey ? { ...agent } : item));
     // Enregistre dans le localStorage
-    console.log(agents);
     this.localStorageService.setItem('agents', agents);
   }
 

@@ -18,7 +18,6 @@ export class DiffHeaderLineComponent {
   readonly canNavigate = this.agentDiffStore.canNavigate;
 
   navigate(monthDirection: number) {
-    console.log('hjdkvhjkdsfhjkbhjkfd');
     this.agentDiffStore.updateMonthOffset(monthDirection);
   }
 }

@@ -28,7 +28,7 @@ npm install
 Pour lancer l'application en mode développement :
 
 ```bash
-ng serve
+npm run start
 ```
 
 L'application sera accessible à l'adresse suivante : [http://localhost:4200](http://localhost:4200).
@@ -38,7 +38,7 @@ L'application sera accessible à l'adresse suivante : [http://localhost:4200](ht
 Des tests unitaires sont fournis pour garantir la fiabilité de l'application. Pour les exécuter :
 
 ```bash
-ng test
+npm run test
 ```
 
 Les résultats des tests seront affichés dans la console.
@@ -73,7 +73,7 @@ operation-cra/
 Pour préparer l'application pour un environnement de production :
 
 ```bash
-ng build --prod
+npm run build:prod
 ```
 
 Les fichiers optimisés seront générés dans le répertoire `dist/operation-cra`.

@@ -57,7 +57,6 @@ export const AgentDiffStore = signalStore(
     onMonthOffsetChange: rxMethod<number>(
       pipe(
         distinctUntilChanged(),
-        tap(() => console.log('hvkjdvhjkrv')),
         tap(() =>
           patchState(store, {
             header: store.getDaysOfCurrentMonth(),
@@ -70,7 +69,6 @@ export const AgentDiffStore = signalStore(
         distinctUntilChanged(),
         tap(() => patchState(store, { isLoading: true })),
         switchMap((monthOffset) => {
-          console.log(store.isLoading());
           return agentService
             .getAllAgentsWithCrasByMonthOffset(monthOffset)
             .pipe(
