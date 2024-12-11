@@ -15,4 +15,5 @@ export interface AgentDiffLineState {
   agentKey: string;
   agentName: string;
   imputation: number[];
+  isCompare: boolean;
 }

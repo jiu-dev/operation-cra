@@ -8,9 +8,8 @@ describe('AgentDiffComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AgentDiffComponent]
-    })
-    .compileComponents();
+      imports: [AgentDiffComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(AgentDiffComponent);
     component = fixture.componentInstance;

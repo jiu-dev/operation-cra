@@ -14,5 +14,6 @@ export class DiffLineComponent {
     agentKey: '',
     agentName: '',
     imputation: [],
+    isCompare: false,
   };
 }

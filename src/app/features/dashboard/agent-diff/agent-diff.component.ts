@@ -1,8 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, Pipe } from '@angular/core';
 import { AgentDiffStore } from '../../../state/agent-diff/agent-diff.store';
 import { DiffLineComponent } from './diff-line/diff-line.component';
 import { NgFor } from '@angular/common';
 import { DiffHeaderLineComponent } from './diff-header-line/diff-header-line.component';
+import { agentLines } from '../../../state/agent-diff/with-computed/agent-lines.computed';
+import { AgentDiffLineState } from '../../../state/agent-diff/agent-diff.type';
 
 @Component({
   selector: 'app-agent-diff',
@@ -20,4 +22,23 @@ export class AgentDiffComponent implements OnInit {
     this.agentDiffStore.loadAgentsWithCras(this.monthOffSet);
     this.agentDiffStore.onMonthOffsetChange(this.monthOffSet);
   }
+
+  readonly alertLine = computed(() => {
+    const lines = this.agentLines();
+    const alertLines = lines.map((line) => line.imputation);
+    const length = alertLines[0]?.length || 0;
+    const memoSum = new Array(length).fill(0);
+
+    for (const line of alertLines) {
+      for (let i = 0; i < length; i++) {
+        memoSum[i] += line[i];
+      }
+    }
+    return {
+      agentKey: 'total',
+      agentName: 'Comparaison',
+      imputation: memoSum,
+      isCompare: true,
+    } as AgentDiffLineState;
+  });
 }

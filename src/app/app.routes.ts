@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { AgentPlanningComponent } from './features/agent-planning/agent-planning.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
 
 export const routes: Routes = [
   {
@@ -8,18 +10,11 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    loadComponent: () =>
-      import('./features/dashboard/dashboard.component').then(
-        (m) => m.DashboardComponent,
-      ),
+    component: DashboardComponent,
   },
   {
     path: 'agents/:key',
-
-    loadComponent: () =>
-      import('./features/agent-planning/agent-planning.component').then(
-        (m) => m.AgentPlanningComponent,
-      ),
+    component: AgentPlanningComponent,
   },
   {
     path: '**',
