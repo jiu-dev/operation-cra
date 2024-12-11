@@ -80,7 +80,6 @@ export class CraImputationLineComponent implements OnInit {
         {},
       ),
     );
-    this.sendImputation(this.formGroup.getRawValue());
     this.validityChange.emit(this.formGroup.valid);
     this.formGroup.statusChanges.subscribe(() => {
       this.validityChange.emit(this.formGroup.valid);

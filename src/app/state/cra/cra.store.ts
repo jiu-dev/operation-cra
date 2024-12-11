@@ -12,7 +12,13 @@ import { computed, inject, Pipe } from '@angular/core';
 import { AgentService } from '../../core/services/agent.service';
 import { ImputationInput } from '../../core/interfaces/imputation-input.interface';
 import { Imputation } from '../../core/interfaces/imputation.interface';
-import { distinctUntilChanged, pipe, switchMap, tap } from 'rxjs';
+import {
+  combineLatest,
+  distinctUntilChanged,
+  pipe,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { tapResponse } from '@ngrx/operators';
 import { getWorkingDays } from '../shared-computed/get-working-days.computed';
@@ -20,6 +26,8 @@ import { getImputationsSum } from '../shared-computed/get-imputation-sum.compute
 import { canNavigate } from '../shared-computed/can-navigate.computed';
 import { getCurrentMonthName } from '../shared-computed/get-current-month-name.computed';
 import { getDaysOfCurrentMonth } from '../shared-computed/get-days-of-current-month.computed';
+import { Cra } from '../../core/interfaces/cra.interface';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 const initialCra = { imputations: [] };
 const initialState: CraState = {
@@ -28,7 +36,7 @@ const initialState: CraState = {
   header: [],
   lines: [],
   isLoading: false,
-  cra: { imputations: [] },
+  cra: initialCra,
   selectedAgentKey: '',
 };
 
@@ -328,6 +336,14 @@ export const CraStore = signalStore(
   })),
   withHooks({
     onInit(store) {
+      const monthOffset$ = toObservable(store.monthOffset);
+      const agentKey$ = toObservable(store.selectedAgentKey);
+      combineLatest([monthOffset$, agentKey$]).subscribe(
+        ([monthOffset, agentKey]) => {
+          store.loadCraByAgentKey({ agentKey, monthOffset });
+          store.initCra();
+        },
+      );
       watchState(store, (state) => {
         // console.log(state.cra);
       });
