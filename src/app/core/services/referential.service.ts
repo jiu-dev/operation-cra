@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Referential } from '../interfaces/referential.interface';
+import { LocalStorageService } from './local-storage.service';
 
 @Injectable({
   providedIn: 'root',
@@ -40,7 +41,7 @@ export class ReferentialService {
     ],
   };
 
-  constructor() {}
+  constructor(private localStorageService: LocalStorageService) {}
 
   async getAgents(): Promise<Referential[]> {
     return new Promise((resolve) => {
@@ -56,5 +57,23 @@ export class ReferentialService {
         resolve(this.mockData.activities); // Simulate network latency
       }, 0);
     });
+  }
+
+  saveReferentialsToLocalStorage(): void {
+    try {
+      const existingData = this.localStorageService.getItem('referentials');
+
+      if (existingData) {
+        console.log(
+          'Referentials already exist in local storage:',
+          existingData,
+        );
+      } else {
+        this.localStorageService.setItem('referentials', this.mockData);
+        console.log('Referentials saved to local storage successfully.');
+      }
+    } catch (error) {
+      console.error('Failed to save referentials to local storage:', error);
+    }
   }
 }

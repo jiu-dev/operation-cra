@@ -17,7 +17,7 @@ import { combineLatest, Subject, Subscription, takeUntil } from 'rxjs';
 import { AgentStore } from '../../state/agent/agent.store';
 import { CraTotalLineComponent } from './cra-total-line/cra-total-line.component';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { CraHeaderLineComponent } from '../../shared/components/cra-header-line/cra-header-line.component';
+import { CraHeaderLineComponent } from './cra-header-line/cra-header-line.component';
 
 @Component({
   selector: 'app-agent-planning',

@@ -42,6 +42,27 @@ export class AgentService {
     });
   }
 
+  getAllAgentsWithCrasByMonthOffset(monthOffset: number): Observable<Agent[]> {
+    // Retrieve agents from localStorage
+    const agents = this.localStorageService.getItem<Agent[]>('agents') || [];
+    // Calculate the target date details (month and year)
+    const { targetMonth, targetYear } = this.calculateTargetDate(monthOffset);
+    // Map agents to include only CRAs for the target month and year
+    const agentsWithFilteredCras = agents.map((agent: Agent) => {
+      const filteredCras = agent.cras.filter(
+        (cra: Cra) => cra.month === targetMonth && cra.year === targetYear,
+      );
+
+      return {
+        ...agent,
+        cras: filteredCras, // Include only the CRAs for the target month/year
+      };
+    });
+    // Log the result for debugging
+    console.log('Agents with filtered CRAs:', agentsWithFilteredCras);
+    return of(agentsWithFilteredCras);
+  }
+
   getCrasByAgentKeyAndMonthOffset(
     agentKey: string,
     monthOffset: number,
@@ -111,7 +132,8 @@ export class AgentService {
   }
 
   async addCra(agentKey: string, cra: Cra) {
-    const agent = this.agents.find((agent) => agent.id === agentKey);
+    let agents = this.localStorageService.getItem<Agent[]>('agents') || [];
+    const agent = agents.find((agent) => agent.id === agentKey);
     if (!agent) {
       throw new Error('No agent with this key');
     }
@@ -127,10 +149,24 @@ export class AgentService {
       agent.cras.push(cra);
     }
     // Met à jour la liste des agents
-    this.agents = this.agents.map((item) =>
-      item.id === agentKey ? { ...agent } : item,
-    );
+    agents = agents.map((item) => (item.id === agentKey ? { ...agent } : item));
     // Enregistre dans le localStorage
-    this.localStorageService.setItem('agents', this.agents);
+    console.log(agents);
+    this.localStorageService.setItem('agents', agents);
+  }
+
+  saveAgentsInLocalStorage(): void {
+    try {
+      const existingData = this.localStorageService.getItem('agents');
+
+      if (existingData) {
+        console.log('Agents already exist in local storage:', existingData);
+      } else {
+        this.localStorageService.setItem('agents', this.agents);
+        console.log('Agents saved to local storage successfully.');
+      }
+    } catch (error) {
+      console.error('Failed to save Agents to local storage:', error);
+    }
   }
 }

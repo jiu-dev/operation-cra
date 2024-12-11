@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { MissionManagerComponent } from './mission-manager.component';
+import { DiffLineComponent } from './diff-line.component';
 
-describe('MissionManagerComponent', () => {
-  let component: MissionManagerComponent;
-  let fixture: ComponentFixture<MissionManagerComponent>;
+describe('DiffLineComponent', () => {
+  let component: DiffLineComponent;
+  let fixture: ComponentFixture<DiffLineComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MissionManagerComponent]
+      imports: [DiffLineComponent]
     })
     .compileComponents();
-    
-    fixture = TestBed.createComponent(MissionManagerComponent);
+
+    fixture = TestBed.createComponent(DiffLineComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

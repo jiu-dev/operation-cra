@@ -1,5 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import { CraStore } from '../../../../state/cra/cra.store';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { NgClass, NgIf } from '@angular/common';
 
 @Component({
@@ -9,7 +8,6 @@ import { NgClass, NgIf } from '@angular/common';
   templateUrl: './month-picker.component.html',
 })
 export class MonthPickerComponent {
-  readonly craStore = inject(CraStore);
   @Input() currentMonthName = '';
   @Input() displayNext = true;
   @Input() displayPrev = true;

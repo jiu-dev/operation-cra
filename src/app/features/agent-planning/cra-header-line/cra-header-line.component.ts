@@ -1,4 +1,4 @@
-import { Component, inject, Input, signal, Signal } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { CraDayItem } from '../../../core/interfaces/cra-day-item.interface';
 import { MonthPickerComponent } from '../../../shared/components/calendar/month-picker/month-picker.component';
 import { CraStore } from '../../../state/cra/cra.store';
@@ -18,6 +18,8 @@ export class CraHeaderLineComponent {
   readonly canNavigate = this.craStore.canNavigate;
 
   navigate(monthDirection: number) {
+    console.log('CRA MONTH PICKER');
+
     this.craStore.updateMonthOffset(monthDirection);
   }
 }

@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { AgentPlanningComponent } from './features/agent-planning/agent-planning.component';
 
 export const routes: Routes = [
   {
@@ -16,7 +15,11 @@ export const routes: Routes = [
   },
   {
     path: 'agents/:key',
-    component: AgentPlanningComponent,
+
+    loadComponent: () =>
+      import('./features/agent-planning/agent-planning.component').then(
+        (m) => m.AgentPlanningComponent,
+      ),
   },
   {
     path: '**',

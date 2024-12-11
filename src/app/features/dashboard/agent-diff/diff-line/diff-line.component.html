@@ -1,0 +1,25 @@
+<div class="flex items-center">
+  <div class="min-w-44 w-44 flex items-center font-medium px-2">
+    {{ agentLine.agentName }}
+  </div>
+  <ng-template #inputTemplate let-item>
+    <div
+      class="border border-orange-200 text-sm rounded p-1 w-full text-center"
+      [ngClass]="{
+        'bg-orange-500': item > 0,
+        '': item === 0,
+      }"
+    ></div>
+  </ng-template>
+  <div
+    *ngIf="!agentLine.imputation?.length"
+    class="text-gray-500 text-sm italic"
+  >
+    Non renseigné ce mois-ci
+  </div>
+  <app-cra-days-line
+    *ngIf="agentLine.imputation?.length"
+    [items]="agentLine.imputation"
+    [template]="inputTemplate"
+  ></app-cra-days-line>
+</div>

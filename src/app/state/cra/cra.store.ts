@@ -8,7 +8,7 @@ import {
   withState,
 } from '@ngrx/signals';
 import { CraState } from './cra.type';
-import { computed, inject } from '@angular/core';
+import { computed, inject, Pipe } from '@angular/core';
 import { AgentService } from '../../core/services/agent.service';
 import { ImputationInput } from '../../core/interfaces/imputation-input.interface';
 import { Imputation } from '../../core/interfaces/imputation.interface';
@@ -93,19 +93,21 @@ export const CraStore = signalStore(
 
       const cra = store.cra();
       const currentImputations = cra.imputations;
-      console.log(cra);
+      console.log('commence', cra);
       let newLines;
-      console.log(currentImputations);
       if (currentImputations.length > 0) {
-        console.log('jesuisla');
+        console.log(currentImputations.length);
         newLines = currentImputations.map((imputation) => {
+          console.log(imputation.activityKey);
           const imputeTimes = imputation.imputeTimes;
           if (imputeTimes) {
-            const newImputationInputs = imputeTimes.map((time, index) => ({
-              formControlName: (index + 1).toString(),
-              isWeekEnd: this.isWeekEnd(index + 1),
-              value: time.toString(),
-            }));
+            const newImputationInputs = imputationInputs.map((input, index) => {
+              return {
+                formControlName: input.formControlName,
+                isWeekEnd: input.isWeekEnd,
+                value: imputeTimes[index].toString(),
+              };
+            });
             return {
               id: imputation.componentId || 0,
               imputationInputs: newImputationInputs,
@@ -118,6 +120,7 @@ export const CraStore = signalStore(
         });
       } else {
         newLines = [{ id: 0, imputationInputs }];
+        console.log('intoElse', newLines);
       }
 
       console.log('newLines', newLines);
@@ -196,8 +199,10 @@ export const CraStore = signalStore(
         if (restDayImputation) {
           const updatedImputeTimes = restDayImputation.imputeTimes;
           const workingDays = store.getWorkingDays();
-          if (updatedImputeTimes)
+          if (updatedImputeTimes) {
+            console.log(updatedImputeTimes);
             workingDays.forEach((index) => (updatedImputeTimes[index] = 0));
+          }
           const updatedImputations = state.cra.imputations.map((imputation) => {
             if (imputation.activityKey === 'repos') {
               return {
@@ -328,10 +333,7 @@ export const CraStore = signalStore(
   })),
   withHooks({
     onInit(store) {
-      watchState(store, (state) => {
-        console.log(state.cra);
-        console.log(state.lines);
-      });
+      watchState(store, (state) => {});
     },
   }),
 );
