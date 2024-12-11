@@ -315,6 +315,7 @@ export const CraStore = signalStore(
                     ...state,
                     cra: cra ? cra : initialCra,
                   })),
+                error: console.error,
                 finalize: () => {
                   patchState(store, { isLoading: false });
                 },
