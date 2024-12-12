@@ -38,13 +38,10 @@ describe('CraImputationLineComponent', () => {
         FormBuilder,
       ],
     }).compileComponents();
-
     fixture = TestBed.createComponent(CraImputationLineComponent);
     component = fixture.componentInstance;
-
     component.id = 1;
     component.activities = [{ key: 'activity1', label: 'Activity 1' }];
-
     fixture.detectChanges();
   });
 

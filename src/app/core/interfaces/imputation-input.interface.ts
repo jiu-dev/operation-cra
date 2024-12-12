@@ -1,5 +1,5 @@
 export interface ImputationInput {
-  formControlName: string;
   isWeekEnd: boolean;
+  index: string;
   value: string;
 }

@@ -1,11 +1,14 @@
-import { computed, Signal } from '@angular/core';
-import { CraDayItem } from '../../core/interfaces/cra-day-item.interface';
+import { Injectable } from '@angular/core';
+import { CraDayItem } from '../../../core/interfaces/cra-day-item.interface';
 
-export const getDaysOfCurrentMonth = (monthOffset: Signal<number>) => {
-  return computed(() => {
+@Injectable({
+  providedIn: 'root',
+})
+export class DateUtilsMethods {
+  initHeaderLine(store: any) {
     const current = new Date();
     const year = current.getFullYear();
-    const month = current.getMonth() + monthOffset();
+    const month = current.getMonth() + store.monthOffset();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days: CraDayItem[] = [];
     const options: Intl.DateTimeFormatOptions = { weekday: 'short' };
@@ -22,5 +25,5 @@ export const getDaysOfCurrentMonth = (monthOffset: Signal<number>) => {
       });
     }
     return days;
-  });
-};
+  }
+}

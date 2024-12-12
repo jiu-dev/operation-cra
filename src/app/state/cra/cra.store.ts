@@ -8,10 +8,8 @@ import {
   withState,
 } from '@ngrx/signals';
 import { CraState } from './cra.type';
-import { computed, inject, Pipe } from '@angular/core';
+import { computed, inject } from '@angular/core';
 import { AgentService } from '../../core/services/agent.service';
-import { ImputationInput } from '../../core/interfaces/imputation-input.interface';
-import { Imputation } from '../../core/interfaces/imputation.interface';
 import {
   combineLatest,
   distinctUntilChanged,
@@ -25,9 +23,9 @@ import { getWorkingDays } from '../shared-computed/get-working-days.computed';
 import { getImputationsSum } from '../shared-computed/get-imputation-sum.computed';
 import { canNavigate } from '../shared-computed/can-navigate.computed';
 import { getCurrentMonthName } from '../shared-computed/get-current-month-name.computed';
-import { getDaysOfCurrentMonth } from '../shared-computed/get-days-of-current-month.computed';
-import { Cra } from '../../core/interfaces/cra.interface';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { InitCraMethods } from './with-methods/init-cra.methods';
+import { CraUserActionMethods } from './with-methods/cra-user-action.methods';
 
 const initialCra = { imputations: [] };
 const initialState: CraState = {
@@ -48,7 +46,12 @@ export const CraStore = signalStore(
     getCurrentMonthName: getCurrentMonthName(monthOffset),
     getWorkingDays: getWorkingDays(cra),
     getImputationsSum: getImputationsSum(cra),
-    getDaysOfCurrentMonth: getDaysOfCurrentMonth(monthOffset),
+    nbOfDays: computed(() => {
+      const current = new Date();
+      const year = current.getFullYear();
+      const month = current.getMonth() + monthOffset();
+      return new Date(year, month + 1, 0).getDate();
+    }),
     getMonthAndYearFromOffset: computed(() => {
       const current = new Date();
       const currentYear = current.getFullYear();
@@ -76,264 +79,90 @@ export const CraStore = signalStore(
       return nextId;
     }),
   })),
-  withMethods((store, agentService = inject(AgentService)) => ({
-    updateMonthOffset(monthDirection: number) {
-      patchState(store, (state) => {
-        const newMonthOffset = state.monthOffset + monthDirection;
-        const range = state.monthRange;
-        if (
-          (range < 0 && newMonthOffset === range) ||
-          (range > 0 && newMonthOffset === range)
-        ) {
-          return state;
-        }
-        return { ...state, monthOffset: newMonthOffset };
-      });
-    },
-    initCra() {
-      const imputationInputs = store.getDaysOfCurrentMonth().map((item) => {
-        return {
-          formControlName: item.number.toString(),
-          isWeekEnd: item.isWeekend,
-          value: '0',
-        } as ImputationInput;
-      });
-
-      const cra = store.cra();
-      const currentImputations = cra.imputations;
-      let newLines;
-      if (currentImputations.length > 0) {
-        newLines = currentImputations.map((imputation) => {
-          const imputeTimes = imputation.imputeTimes;
-          if (imputeTimes) {
-            const newImputationInputs = imputationInputs.map((input, index) => {
-              return {
-                formControlName: input.formControlName,
-                isWeekEnd: input.isWeekEnd,
-                value: imputeTimes[index].toString(),
-              };
-            });
-            return {
-              id: imputation.componentId || 0,
-              imputationInputs: newImputationInputs,
-            };
-          }
-          return {
-            id: imputation.componentId || 0,
-            imputationInputs: [],
-          };
+  withMethods(
+    (
+      store,
+      agentService = inject(AgentService),
+      initCraMethods = inject(InitCraMethods),
+      craUserActionMethods = inject(CraUserActionMethods),
+    ) => ({
+      updateMonthOffset(monthDirection: number) {
+        craUserActionMethods.updateMonthOffset(store, monthDirection);
+      },
+      initCra() {
+        initCraMethods.initCra(store);
+      },
+      getLineInputs(componentId: number) {
+        return initCraMethods.getLineInputs(store, componentId);
+      },
+      selectedActivity(componentId: number) {
+        return craUserActionMethods.selectedActivity(store, componentId);
+      },
+      addLine() {
+        return craUserActionMethods.addLine(store);
+      },
+      deleteLine(componentId: number) {
+        return craUserActionMethods.deleteLine(store, componentId);
+      },
+      deleteImputation(componentId: number) {
+        craUserActionMethods.deleteImputation(store, componentId);
+      },
+      initImputations() {},
+      updateActivity(componentId: number, activityKey: string) {
+        craUserActionMethods.updateImputation(store, componentId, {
+          activityKey,
         });
-      } else {
-        newLines = [{ id: 0, imputationInputs }];
-      }
-
-      patchState(store, (state) => {
-        return {
-          ...state,
-          header: store.getDaysOfCurrentMonth(),
-          lines: newLines,
-        };
-      });
-    },
-    getImputationInputsById(componentId: number) {
-      const activity = store
-        .lines()
-        .find((activity) => activity.id === componentId);
-      if (activity) {
-        if (activity.imputationInputs) {
-          return activity.imputationInputs;
-        }
-        throw new Error(
-          `There is no imputations bind to the component with the ID : ${componentId}`,
-        );
-      }
-      throw new Error(
-        `There is no activity bind to the component with the ID : ${componentId}`,
-      );
-    },
-    selectedActivity(componentId: number) {
-      return store
-        .cra()
-        .imputations.find(
-          (imputation) => imputation.componentId === componentId,
-        )?.activityKey;
-    },
-    addLine() {
-      const id = store.nextAvailableLineID();
-      const imputationInputs = store.getDaysOfCurrentMonth().map((item) => {
-        return {
-          formControlName: item.number.toString(),
-          isWeekEnd: item.isWeekend,
-          value: '0',
-        } as ImputationInput;
-      });
-      patchState(store, (state) => ({
-        lines: [...state.lines, { id, imputationInputs }],
-      }));
-    },
-    deleteLine(componentId: number) {
-      this.deleteImputation(componentId);
-      patchState(store, (state) => {
-        return {
-          lines: [...state.lines.filter((line) => line.id !== componentId)],
-        };
-      });
-    },
-    deleteImputation(componentId: number) {
-      patchState(store, (state) => {
-        const newImputation = state.cra.imputations.filter(
-          (imputation) => imputation.componentId !== componentId,
-        );
-        return {
-          ...state,
-          cra: {
-            ...state.cra,
-            imputations: newImputation,
-          },
-        };
-      });
-    },
-    resetWorkingDays(componentId: number, index: number) {
-      patchState(store, (state) => {
-        const updatedImputations = state.cra.imputations.map((imputation) => {
-          if (imputation.componentId !== componentId) {
-            const updatedImputeTimes = imputation.imputeTimes
-              ? [...imputation.imputeTimes]
-              : [];
-            if (updatedImputeTimes[index] !== undefined) {
-              updatedImputeTimes[index] = 0;
-            }
-            return {
-              ...imputation,
-              imputeTimes: updatedImputeTimes,
-            };
-          }
-          return imputation;
+      },
+      updateImputeTimes(componentId: number, imputeTimes: number[]) {
+        craUserActionMethods.updateImputation(store, componentId, {
+          imputeTimes,
         });
-
-        return {
-          ...state,
-          cra: {
-            ...state.cra,
-            imputations: updatedImputations,
-          },
-        };
-      });
-    },
-    getUpdatedImputeTimeIndex(imputation: number[], newImputation: number[]) {
-      for (let i = 0; i < imputation.length; i++) {
-        if (imputation[i] !== newImputation[i]) {
-          console.log('index change');
-          return i;
-        }
-      }
-      console.log('index unchange');
-      return;
-    },
-    resetRestDay(workDayIndex: number) {
-      patchState(store, (state) => {
-        let restDayImputation = state.cra.imputations.find(
-          (imputation) => imputation.activityKey === 'repos',
+      },
+      updateImputeTime(componentId: number, index: number, imputeTime: number) {
+        craUserActionMethods.updateImputeTime(
+          store,
+          componentId,
+          index,
+          imputeTime,
         );
-
-        if (restDayImputation) {
-          const updatedImputeTimes = restDayImputation.imputeTimes;
-          if (updatedImputeTimes) {
-            updatedImputeTimes[workDayIndex] = 0;
-          }
-          const updatedImputations = state.cra.imputations.map((imputation) => {
-            if (imputation.activityKey === 'repos') {
-              return {
-                ...imputation,
-                imputeTimes: updatedImputeTimes,
-              };
-            }
-            return imputation;
-          });
-          return {
-            cra: {
-              ...state.cra,
-              imputations: updatedImputations,
-            },
-          };
-        }
-        return state;
-      });
-    },
-    updateImputation(componentId: number, newImputation: Imputation) {
-      patchState(store, (state) => {
-        let imputations = state.cra.imputations;
-        const imputation = imputations.find(
-          (imputation) => imputation.componentId === componentId,
-        );
-        if (imputation) {
-          imputations = imputations.filter(
-            (item) => item.componentId !== componentId,
-          );
-          newImputation = {
-            ...imputation,
-            ...newImputation,
-          };
-        } else {
-          newImputation = {
-            ...newImputation,
-            componentId,
-          };
-        }
-        imputations.push(newImputation);
-        return {
-          cra: {
-            imputations: [...imputations],
-          },
-        };
-      });
-    },
-    selectAgent(key: string) {
-      patchState(store, (state) => ({ ...state, selectedAgentKey: key }));
-    },
-    sendCra() {
-      const craDate = store.getMonthAndYearFromOffset();
-      const cra = {
-        month: craDate.month,
-        year: craDate.year,
-        imputations: store.cra().imputations,
-      };
-      agentService.addCra(store.selectedAgentKey(), cra);
-    },
-    isWeekEnd(day: number) {
-      const current = new Date();
-      const year = current.getFullYear();
-      const month = current.getMonth() + store.monthOffset();
-      const date = new Date(year, month, day);
-      return date.getDay() === 0 || date.getDay() === 6;
-    },
-    loadCraByAgentKey: rxMethod<{ agentKey: string; monthOffset: number }>(
-      pipe(
-        distinctUntilChanged(),
-        tap(() => patchState(store, { isLoading: true })),
-        switchMap((emitValue) => {
-          return agentService
-            .getCrasByAgentKeyAndMonthOffset(
-              emitValue.agentKey,
-              emitValue.monthOffset,
-            )
-            .pipe(
-              tapResponse({
-                next: (cra) =>
-                  patchState(store, (state) => ({
-                    ...state,
-                    cra: cra ? cra : initialCra,
-                  })),
-                error: console.error,
-                finalize: () => {
-                  patchState(store, { isLoading: false });
-                },
-              }),
-            );
-        }),
+      },
+      selectAgent(key: string) {
+        craUserActionMethods.selectAgent(store, key);
+      },
+      sendCra() {
+        craUserActionMethods.sendCra(store);
+      },
+      _isWeekEnd(day: number) {
+        return initCraMethods._isWeekEnd(store, day);
+      },
+      loadCraByAgentKey: rxMethod<{ agentKey: string; monthOffset: number }>(
+        pipe(
+          distinctUntilChanged(),
+          tap(() => patchState(store, { isLoading: true })),
+          switchMap((emitValue) => {
+            return agentService
+              .getCrasByAgentKeyAndMonthOffset(
+                emitValue.agentKey,
+                emitValue.monthOffset,
+              )
+              .pipe(
+                tapResponse({
+                  next: (cra) =>
+                    patchState(store, (state) => ({
+                      ...state,
+                      cra: cra ? cra : initialCra,
+                    })),
+                  error: console.error,
+                  finalize: () => {
+                    patchState(store, { isLoading: false });
+                  },
+                }),
+              );
+          }),
+        ),
       ),
-    ),
-  })),
+    }),
+  ),
   withHooks({
     onInit(store) {
       const monthOffset$ = toObservable(store.monthOffset);

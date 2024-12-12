@@ -14,5 +14,5 @@ export interface CraState {
 
 export interface LineState {
   id: number;
-  imputationInputs: ImputationInput[];
+  inputs: ImputationInput[];
 }

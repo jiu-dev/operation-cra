@@ -3,7 +3,6 @@ import { AgentDiffStore } from '../../../state/agent-diff/agent-diff.store';
 import { DiffLineComponent } from './diff-line/diff-line.component';
 import { NgFor } from '@angular/common';
 import { DiffHeaderLineComponent } from './diff-header-line/diff-header-line.component';
-import { agentLines } from '../../../state/agent-diff/with-computed/agent-lines.computed';
 import { AgentDiffLineState } from '../../../state/agent-diff/agent-diff.type';
 
 @Component({

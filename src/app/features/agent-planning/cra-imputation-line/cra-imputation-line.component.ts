@@ -45,10 +45,10 @@ export class CraImputationLineComponent implements OnInit {
   readonly craStore = inject(CraStore);
   readonly refStore = inject(ReferentialStore);
   @Input() activities: Referential[] = [];
-  @Input() id: number = 0;
+  @Input() componentId: number = 0;
   @Output() validityChange = new EventEmitter<boolean>();
   formGroup!: FormGroup;
-  imputationInputs: ImputationInput[] = [];
+  lineInputs: ImputationInput[] = [];
 
   constructor(private fb: FormBuilder) {}
 
@@ -57,7 +57,7 @@ export class CraImputationLineComponent implements OnInit {
   }
 
   readonly selectedOption = computed(() => {
-    const activityKey = this.craStore.selectedActivity(this.id);
+    const activityKey = this.craStore.selectedActivity(this.componentId);
     const referential = this.refStore
       .activities()
       .find((ref) => ref.key === activityKey);
@@ -68,22 +68,20 @@ export class CraImputationLineComponent implements OnInit {
   });
 
   private initializeForm(): void {
-    this.imputationInputs = this.craStore.getImputationInputsById(this.id);
+    this.lineInputs = this.craStore.getLineInputs(this.componentId);
     this.formGroup = this.fb.group(
-      this.imputationInputs.reduce(
-        (acc: { [key: string]: FormControl }, input) => {
-          acc[input.formControlName] = new FormControl(input.value, [
-            Validators.pattern('^[0-9]*$'),
-          ]);
-          return acc;
-        },
-        {},
-      ),
+      this.lineInputs.reduce((acc: { [key: string]: FormControl }, input) => {
+        acc[input.index] = new FormControl(input.value, [
+          Validators.pattern('^[0-9]*$'),
+        ]);
+        return acc;
+      }, {}),
     );
-    this.validityChange.emit(this.formGroup.valid);
-    this.formGroup.statusChanges.subscribe(() => {
-      this.validityChange.emit(this.formGroup.valid);
-    });
+    // Put Validity into the imputation inputs store
+    // this.validityChange.emit(this.formGroup.valid);
+    // this.formGroup.statusChanges.subscribe(() => {
+    //   this.validityChange.emit(this.formGroup.valid);
+    // });
     this.formGroup.valueChanges.subscribe((changes) => {
       const sanitizedChanges = Object.keys(changes).reduce(
         (acc: Record<string, string>, key) => {
@@ -96,38 +94,34 @@ export class CraImputationLineComponent implements OnInit {
         },
         {},
       );
-
       this.formGroup.patchValue(sanitizedChanges, { emitEvent: false });
-      this.sendImputation(sanitizedChanges);
     });
     this.isActivitySelected();
     this.onImputationChange(this.currentImputation);
   }
 
-  getImputations() {
-    return this.dayInputs.map((input) => ({
-      dayKey: input.nativeElement.id,
-      imputationTime: input.nativeElement.value,
-    }));
-  }
-
   onSelectActivity(activity: Referential): void {
-    const newImputation = { activityKey: activity.key };
-    this.craStore.updateImputation(this.id, newImputation);
-
+    this.craStore.updateActivity(this.componentId, activity.key);
     this.isActivitySelected();
   }
 
-  sendImputation(values: { [key: string]: string }): void {
-    const newImputation = { imputeTimes: this.transformInputs(values) };
-
-    this.craStore.updateImputation(this.id, newImputation);
+  onImputeTimeChange(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    const index = inputElement.getAttribute('data-key');
+    const value = inputElement.value;
+    if (index) {
+      this.craStore.updateImputeTime(
+        this.componentId,
+        parseInt(index, 10),
+        parseInt(value, 10),
+      );
+    }
   }
 
   readonly currentImputation = computed(() => {
     return this.craStore.cra
       .imputations()
-      .find((imputation) => imputation.componentId === this.id);
+      .find((imputation) => imputation.componentId === this.componentId);
   });
 
   readonly onImputationChange = rxMethod<Imputation | undefined>(
@@ -140,28 +134,6 @@ export class CraImputationLineComponent implements OnInit {
           );
         }
       }),
-      pairwise(),
-      map(([oldImputation, newImputation]) => {
-        const isValidImputation =
-          oldImputation?.imputeTimes &&
-          newImputation?.imputeTimes &&
-          newImputation?.componentId;
-
-        if (!isValidImputation) return;
-
-        const index = this.craStore.getUpdatedImputeTimeIndex(
-          oldImputation.imputeTimes!,
-          newImputation.imputeTimes!,
-        );
-
-        if (index === undefined) return;
-
-        if (oldImputation.activityKey !== 'repos') {
-          this.craStore.resetRestDay(index);
-        } else {
-          this.craStore.resetWorkingDays(newImputation.componentId!, index);
-        }
-      }),
     ),
   );
 
@@ -172,23 +144,15 @@ export class CraImputationLineComponent implements OnInit {
     return this.formGroup.disable();
   });
 
-  private transformInputs(values: { [key: string]: string }) {
-    const result = [];
-    for (const key in values) {
-      result[parseInt(key, 10) - 1] = parseInt(values[key], 10);
-    }
-    return result;
-  }
-
   private reverseTransformInputs(values: number[]): { [key: string]: string } {
     const result: { [key: string]: string } = {};
     values.forEach((value, index) => {
-      result[(index + 1).toString()] = value.toString();
+      result[index.toString()] = value.toString();
     });
     return result;
   }
 
   onDeleteActivity(): void {
-    this.craStore.deleteLine(this.id);
+    this.craStore.deleteLine(this.componentId);
   }
 }

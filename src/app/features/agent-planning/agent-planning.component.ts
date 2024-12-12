@@ -13,21 +13,10 @@ import { NgFor } from '@angular/common';
 import { ReferentialStore } from '../../state/referential/referential.store';
 import { AgentSelectorComponent } from './agent-selector/agent-selector.component';
 import { ActivatedRoute } from '@angular/router';
-import {
-  combineLatest,
-  distinctUntilChanged,
-  pipe,
-  Subject,
-  Subscription,
-  takeUntil,
-  tap,
-} from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { AgentStore } from '../../state/agent/agent.store';
 import { CraTotalLineComponent } from './cra-total-line/cra-total-line.component';
-import { toObservable } from '@angular/core/rxjs-interop';
 import { CraHeaderLineComponent } from './cra-header-line/cra-header-line.component';
-import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { Cra } from '../../core/interfaces/cra.interface';
 
 @Component({
   selector: 'app-agent-planning',
@@ -65,13 +54,6 @@ export class AgentPlanningComponent implements OnDestroy {
 
   formsValidity: boolean[] = [];
 
-  readonly canAddLine = computed(() => {
-    return (
-      this.craLines().length > 0 &&
-      this.craLines().length === this.refActivities().length
-    );
-  });
-
   private routeSubscription!: Subscription;
   constructor(private route: ActivatedRoute) {}
 
@@ -89,6 +71,13 @@ export class AgentPlanningComponent implements OnDestroy {
   get allFormsValid(): boolean {
     return this.formsValidity.every((isValid) => isValid);
   }
+
+  readonly canAddLine = computed(() => {
+    return (
+      this.craLines().length > 0 &&
+      this.craLines().length === this.refActivities().length
+    );
+  });
 
   onChildValidityChange(index: number, isValid: boolean): void {
     this.formsValidity[index] = isValid;

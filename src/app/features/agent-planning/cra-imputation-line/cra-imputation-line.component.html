@@ -3,7 +3,7 @@
     <div
       class="flex items-center pr-2"
       [ngClass]="{
-        hidden: id === 0,
+        hidden: componentId === 0,
       }"
     >
       <app-circular-button [size]="'xs'" (onClick)="onDeleteActivity()">
@@ -28,23 +28,24 @@
       ></app-select-input>
     </div>
   </div>
-
-  <ng-template #inputTemplate let-imputationInput>
+  <ng-template #inputTemplate let-lineInput>
     <input
-      [formControlName]="imputationInput.formControlName"
+      [formControlName]="lineInput.index"
+      [attr.data-key]="lineInput.index"
+      (input)="onImputeTimeChange($event)"
       type="text"
       class="border border-gray-300 text-sm rounded p-1 w-full text-center"
       [ngClass]="{
-        'bg-indigo-300 text-white': imputationInput.isWeekEnd,
-        'text-gray-900': !imputationInput.isWeekEnd,
+        'bg-indigo-300 text-white': lineInput.isWeekEnd,
+        'text-gray-900': !lineInput.isWeekEnd,
         'bg-gray-200 text-gray-500 cursor-not-allowed': !formGroup.get(
-          imputationInput.formControlName
+          lineInput.index
         )?.enabled,
       }"
     />
   </ng-template>
   <app-cra-days-line
-    [items]="imputationInputs"
+    [items]="lineInputs"
     [template]="inputTemplate"
   ></app-cra-days-line>
 </div>
