@@ -174,7 +174,7 @@ export const CraStore = signalStore(
         },
       );
       watchState(store, (state) => {
-        // console.log(state.cra);
+        // console.log(state.lines);
       });
     },
   }),

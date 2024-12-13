@@ -7,19 +7,19 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class CraSideEffectMethods {
-  _resetDays(store: any, imputation: Imputation, index: number) {
-    if (imputation.activityKey && imputation.componentId) {
-      if (imputation.activityKey !== 'repos') {
-        this._resetRestDay(store, index);
+  resetDays(store: any, imputation: Imputation, index: number) {
+    if (imputation.componentId) {
+      if (imputation.activityKey && imputation.activityKey !== 'repos') {
+        this.resetRestDay(store, index);
         console.log('Index is Reset', index);
       } else {
-        this._resetWorkingDays(store, imputation.componentId, index);
+        this.resetWorkingDays(store, imputation.componentId, index);
         console.log('Index is Reset Working', index);
       }
     }
   }
 
-  _resetRestDay(store: any, workDayIndex: number) {
+  private resetRestDay(store: any, workDayIndex: number) {
     patchState(store, (state: CraState) => {
       let restDayImputation = state.cra.imputations.find(
         (imputation) => imputation.activityKey === 'repos',
@@ -49,7 +49,7 @@ export class CraSideEffectMethods {
     });
   }
 
-  _resetWorkingDays(store: any, componentId: number, index: number) {
+  private resetWorkingDays(store: any, componentId: number, index: number) {
     patchState(store, (state: CraState) => {
       const updatedImputations = state.cra.imputations.map((imputation) => {
         if (imputation.componentId !== componentId) {

@@ -77,11 +77,6 @@ export class CraImputationLineComponent implements OnInit {
         return acc;
       }, {}),
     );
-    // Put Validity into the imputation inputs store
-    // this.validityChange.emit(this.formGroup.valid);
-    // this.formGroup.statusChanges.subscribe(() => {
-    //   this.validityChange.emit(this.formGroup.valid);
-    // });
     this.formGroup.valueChanges.subscribe((changes) => {
       const sanitizedChanges = Object.keys(changes).reduce(
         (acc: Record<string, string>, key) => {
@@ -128,10 +123,7 @@ export class CraImputationLineComponent implements OnInit {
     pipe(
       tap((imputation) => {
         if (imputation?.imputeTimes) {
-          this.formGroup.patchValue(
-            this.reverseTransformInputs(imputation.imputeTimes),
-            { emitEvent: false },
-          );
+          this.renderImputation(imputation.imputeTimes);
         }
       }),
     ),
@@ -144,12 +136,12 @@ export class CraImputationLineComponent implements OnInit {
     return this.formGroup.disable();
   });
 
-  private reverseTransformInputs(values: number[]): { [key: string]: string } {
+  private renderImputation(values: number[]): void {
     const result: { [key: string]: string } = {};
     values.forEach((value, index) => {
       result[index.toString()] = value.toString();
     });
-    return result;
+    this.formGroup.patchValue(result, { emitEvent: false });
   }
 
   onDeleteActivity(): void {

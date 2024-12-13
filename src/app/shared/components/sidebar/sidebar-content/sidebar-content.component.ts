@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { SidebarLinkComponent } from '../sidebar-link/sidebar-link.component';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { LocalStorageService } from '../../../../core/services/local-storage.service';
@@ -8,7 +8,7 @@ import { LocalStorageService } from '../../../../core/services/local-storage.ser
 @Component({
   selector: 'app-sidebar-content',
   templateUrl: './sidebar-content.component.html',
-  imports: [SidebarLinkComponent, NgIf, NgFor],
+  imports: [SidebarLinkComponent, NgFor],
   standalone: true,
   styleUrl: './sidebar-content.component.scss',
 })

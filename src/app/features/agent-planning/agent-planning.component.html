@@ -5,11 +5,11 @@
     <app-agent-selector></app-agent-selector>
   </div>
   <div class="flex flex-col gap-3 px-4 py-5 sm:p-6">
-    <app-cra-header-line [days]="craHeader()"></app-cra-header-line>
-    <ng-container *ngFor="let line of craLines(); let i = index">
+    <app-cra-header-line [days]="header()"></app-cra-header-line>
+    <ng-container *ngFor="let line of lines(); let i = index">
       <app-cra-imputation-line
         [activities]="activities()"
-        [id]="line.id"
+        [componentId]="line.id"
         (validityChange)="onChildValidityChange(i, $event)"
       ></app-cra-imputation-line>
     </ng-container>

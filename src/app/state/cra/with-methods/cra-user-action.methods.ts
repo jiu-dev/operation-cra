@@ -41,9 +41,17 @@ export class CraUserActionMethods extends CommonCraMethods {
 
   addLine(store: any) {
     const componentId = store.nextAvailableLineID();
-    console.log(componentId);
-    patchState(store, (state: any) => ({
-      lines: [...state.lines, this._createDefaultLine(store, componentId)],
+    const newImputation = this.createImputation(store, componentId);
+    const newLine = {
+      id: componentId,
+      inputs: this.createLineInputs(store, newImputation.imputeTimes),
+    };
+    patchState(store, (state: CraState) => ({
+      cra: {
+        ...state.cra,
+        imputations: [...state.cra.imputations, newImputation],
+      },
+      lines: [...state.lines, newLine],
     }));
   }
 
@@ -77,17 +85,22 @@ export class CraUserActionMethods extends CommonCraMethods {
     index: number,
     imputeTime: number,
   ) {
-    const currentImputation = store.cra
+    console.log(`[${componentId}] : IDX : ${index}, Time : ${imputeTime}`);
+    console.log(imputeTime);
+    let currentImputation = store.cra
       .imputations()
       .find((imputation: Imputation) => imputation.componentId === componentId);
+    console.log(currentImputation);
     if (
       currentImputation?.imputeTimes &&
       currentImputation?.imputeTimes.length > 0
     ) {
-      currentImputation.imputeTimes[index] = imputeTime;
-      this.updateImputation(store, componentId, currentImputation);
-      this.craSideEffect._resetDays(store, currentImputation, index);
+    } else {
+      currentImputation.imputeTimes = new Array(store.nbOfDays()).fill(0);
     }
+    currentImputation.imputeTimes[index] = imputeTime;
+    this.updateImputation(store, componentId, currentImputation);
+    this.craSideEffect.resetDays(store, currentImputation, index);
   }
 
   selectAgent(store: any, key: string) {

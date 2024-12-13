@@ -27,12 +27,10 @@ export class InitCraMethods extends CommonCraMethods {
     const line = store
       .lines()
       .find((line: LineState) => line.id === componentId) as LineState;
-    console.log(line);
     if (line) {
       if (line.inputs) {
         return line.inputs;
       }
-      console.log(line);
       throw new Error(
         `There is no imputations bind to the component with the ID : ${componentId}`,
       );
@@ -44,18 +42,23 @@ export class InitCraMethods extends CommonCraMethods {
 
   private initLines(store: any) {
     const cra = store.cra();
-    const currentImputations = cra.imputations;
-    if (currentImputations.length > 0) {
-      return currentImputations.map((imputation: Imputation) => {
+    let currentImputations = cra.imputations;
+    if (currentImputations.length === 0) {
+      currentImputations = [this.createImputation(store, 0)];
+    }
+
+    return currentImputations
+      .sort(
+        (a: Imputation, b: Imputation) =>
+          (a.componentId || 0) - (b.componentId || 0),
+      )
+      .map((imputation: Imputation) => {
         return {
-          id: imputation.componentId || 0,
+          id: imputation.componentId,
           inputs: imputation.imputeTimes
-            ? this._createLineInputs(store, imputation.imputeTimes)
+            ? this.createLineInputs(store, imputation.imputeTimes)
             : [],
         };
       });
-    } else {
-      return [this._createDefaultLine(store, 0)];
-    }
   }
 }

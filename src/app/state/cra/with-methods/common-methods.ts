@@ -1,22 +1,23 @@
 import { ImputationInput } from '../../../core/interfaces/imputation-input.interface';
 
 export abstract class CommonCraMethods {
-  _createLineInputs(store: any, existingImputations: number[]) {
+  createLineInputs(store: any, imputation: number[]) {
     let lineInputs: ImputationInput[] = [];
-    for (let i = 0; i < existingImputations.length; i++) {
+    for (let i = 0; i < imputation.length; i++) {
       lineInputs.push({
         index: i.toString(),
         isWeekEnd: this._isWeekEnd(store, i + 1),
-        value: existingImputations[i].toString(),
+        value: imputation[i].toString(),
       });
     }
     return lineInputs;
   }
 
-  _createDefaultLine(store: any, componentId: number) {
-    const defaultImputeTimes = new Array(store.nbOfDays()).fill('0');
-    const inputs = this._createLineInputs(store, defaultImputeTimes);
-    return { id: componentId, inputs };
+  createImputation(store: any, componentId: number) {
+    return {
+      componentId: componentId,
+      imputeTimes: new Array(store.nbOfDays()).fill(0),
+    };
   }
 
   _isWeekEnd(store: any, day: number) {

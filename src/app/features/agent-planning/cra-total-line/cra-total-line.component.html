@@ -1,13 +1,17 @@
 <div class="flex items-center">
-  <div class="min-w-44 w-44 flex px-2">Total</div>
-
+  <div class="min-w-44 w-44 px-2">
+    <div class="flex gap-2 px-2 py-0.5 rounded text-white bg-indigo-300">
+      <div class="flex-grow">Total</div>
+      <span *ngIf="this.total() > 0" class="pr-1">{{ this.total() }} h</span>
+    </div>
+  </div>
   <ng-template #inputTemplate let-item>
     <div class="border border-gray-300 text-sm rounded p-1 w-full text-center">
       {{ item }}
     </div>
   </ng-template>
   <app-cra-days-line
-    [items]="this.craStore.getImputationsSum()"
+    [items]="this.totalLines()"
     [template]="inputTemplate"
   ></app-cra-days-line>
 </div>

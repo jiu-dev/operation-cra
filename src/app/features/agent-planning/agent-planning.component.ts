@@ -39,8 +39,8 @@ export class AgentPlanningComponent implements OnDestroy {
   readonly craStore = inject(CraStore);
   readonly referentialStore = inject(ReferentialStore);
   readonly agentStore = inject(AgentStore);
-  readonly craHeader = this.craStore.header;
-  readonly craLines = this.craStore.lines;
+  readonly header = this.craStore.header;
+  readonly lines = this.craStore.lines;
   readonly refActivities = this.referentialStore.activities;
   readonly activities = computed(() => {
     const keys = this.craStore.cra
@@ -61,6 +61,7 @@ export class AgentPlanningComponent implements OnDestroy {
     this.routeSubscription = this.route.paramMap.subscribe((paramMap) => {
       const agentKey = paramMap.get('key');
       if (agentKey) {
+        console.log(agentKey);
         this.craStore.selectAgent(agentKey);
         this.agentStore.loadAgent(agentKey);
       }
@@ -74,8 +75,8 @@ export class AgentPlanningComponent implements OnDestroy {
 
   readonly canAddLine = computed(() => {
     return (
-      this.craLines().length > 0 &&
-      this.craLines().length === this.refActivities().length
+      this.lines().length > 0 &&
+      this.lines().length === this.refActivities().length
     );
   });
 
